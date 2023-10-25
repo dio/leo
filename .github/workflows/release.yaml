@@ -28,3 +28,5 @@ jobs:
             leo-${{ github.ref_name }}-amd64.tar.gz leo-${{ github.ref_name }}-arm.tar.gz \
             --title ${{ github.ref_name }} \
             --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

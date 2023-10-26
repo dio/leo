@@ -65,10 +65,10 @@ func main() {
 
 func init() {
 	proxyBuildCmd.Flags().StringVar(&overrideEnvoy, "override-envoy", "", "Override Envoy repository. For example: tetratelabs/envoy@88a80e6bbbee56de8c3899c75eaf36c46fad1aa7")
-	proxyBuildCmd.Flags().StringVar(&patchSource, "patch-source", "github://dio/leo-patches", "Patch source. For example: file://patches")
+	proxyBuildCmd.Flags().StringVar(&patchSource, "patch-source", "github://dio/leo", "Patch source. For example: file://patches")
 	proxyBuildCmd.Flags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
 	proxyInfoCmd.Flags().StringVar(&overrideEnvoy, "override-envoy", "", "Override Envoy repository. For example: tetratelabs/envoy@88a80e6bbbee56de8c3899c75eaf36c46fad1aa7")
-	proxyInfoCmd.Flags().StringVar(&patchSource, "patch-source", "github://dio/leo-patches", "Patch source. For example: file://patches")
+	proxyInfoCmd.Flags().StringVar(&patchSource, "patch-source", "github://dio/leo", "Patch source. For example: file://patches")
 	proxyInfoCmd.Flags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
 	proxyCmd.AddCommand(proxyBuildCmd)
 	proxyCmd.AddCommand(proxyInfoCmd)

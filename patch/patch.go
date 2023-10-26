@@ -31,13 +31,13 @@ type GitHubGetter struct {
 
 func (g GitHubGetter) Get(info Info) ([]byte, error) {
 	patchFile := info.Ref + info.Suffix + ".patch"
-	content, err := github.GetRaw(g.Repo, path.Join(info.Name, patchFile), "main")
+	content, err := github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
 
 	patchFile = info.Ref + ".patch"
-	content, err = github.GetRaw(g.Repo, path.Join(info.Name, patchFile), "main")
+	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
@@ -45,7 +45,7 @@ func (g GitHubGetter) Get(info Info) ([]byte, error) {
 	// We search for minor.
 	idx := strings.LastIndex(info.Ref, ".")
 	patchFile = info.Ref[0:idx] + ".patch"
-	content, err = github.GetRaw(g.Repo, path.Join(info.Name, patchFile), "main")
+	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}

@@ -94,6 +94,11 @@ type TargetOptions struct {
 }
 
 func PrepareBuilder(proxyDir string) error {
+	// Currently this is only required for tcp_stats, and on amd64.
+	if runtime.GOARCH != "amd64" {
+		return nil
+	}
+
 	if err := os.WriteFile(filepath.Join(proxyDir, "common", "scripts", "Dockerfile"),
 		[]byte(`# Generated.
 ARG IMG
@@ -118,7 +123,6 @@ COPY --from=linux_headers /usr/include/linux/* /usr/include/linux/
 	defer func() {
 		_ = f.Close()
 	}()
-
 	_, err = f.WriteString(`
 # Generated.
 docker build --build-arg="IMG=${IMG}" "${SCRIPT_DIR}" -t leo/builder:1
@@ -181,7 +185,7 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 istio-proxy:
 	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s
 	mkdir -p /work/out
-	mv %s %s/envoy
+	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
 `
 	return fmt.Sprintf(content,
@@ -215,7 +219,7 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 envoy:
 	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s
 	mkdir -p /work/out
-	mv %s %s/envoy
+	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
 `
 	return fmt.Sprintf(content,
@@ -249,7 +253,7 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 envoy-contrib:
 	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s
 	mkdir -p /work/out
-	mv %s %s/envoy
+	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
 `
 	return fmt.Sprintf(content,

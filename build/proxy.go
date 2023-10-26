@@ -28,6 +28,7 @@ func NewProxyBuilder(target, overrideEnvoy, patchSource string, fipsBuild bool) 
 		target:      arg.Version(target),
 		envoy:       arg.Version(overrideEnvoy),
 		patchGetter: patchGetter,
+		fipsBuild:   fipsBuild,
 	}, nil
 }
 

@@ -65,7 +65,8 @@ func (b *IstioProxyBuilder) Info(ctx context.Context) error {
   workspace: istio/proxy@%s
   envoy: %s
   envoyVersion: %s
-`, istioProxyRef, b.Envoy, envoyVersion)
+  fips: %v
+`, istioProxyRef, b.Envoy, envoyVersion, b.FIPSBuild)
 	return nil
 }
 
@@ -79,7 +80,8 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
   workspace: istio/proxy@%s
   envoy: %s
   envoyVersion: %s
-`, istioProxyRef, b.Envoy, envoyVersion)
+  fips: %v
+`, istioProxyRef, b.Envoy, envoyVersion, b.FIPSBuild)
 
 	istioProxyDir, err := utils.GetTarballAndExtract("istio/proxy", istioProxyRef, "work")
 	if err != nil {

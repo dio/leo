@@ -125,6 +125,10 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		return err
 	}
 
+	if err := istioproxy.PrepareBuilder(istioProxyDir); err != nil {
+		return err
+	}
+
 	fmt.Print(istioProxyDir)
 
 	return nil

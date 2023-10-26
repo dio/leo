@@ -93,6 +93,41 @@ type TargetOptions struct {
 	FIPSBuild    bool
 }
 
+func PrepareBuilder(proxyDir string) error {
+	if err := os.WriteFile(filepath.Join(proxyDir, "common", "scripts", "Dockerfile"),
+		[]byte(`# Generated.
+ARG IMG
+
+FROM ubuntu:18.04 AS linux_headers_amd64
+FROM ubuntu:20.04 AS linux_headers_arm64
+
+FROM linux_headers_${TARGETARCH} AS linux_headers
+RUN apt-get update && apt-get install -y --no-install-recommends linux-libc-dev
+
+FROM $IMG
+COPY --from=linux_headers /usr/include/linux /usr/include/
+`),
+		os.ModePerm); err != nil {
+		return err
+	}
+
+	f, err := os.OpenFile(filepath.Join(proxyDir, "common", "scripts", "setup_env.sh"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	_, err = f.WriteString(`
+# Generated.
+docker build --build-arg="IMG=${IMG}" "${SCRIPT_DIR}" -t leo/builder:1
+IMG="leo/builder:1"
+`)
+
+	return err
+}
+
 func AddMakeTargets(opts TargetOptions) error {
 	f, err := os.OpenFile(filepath.Join(opts.ProxyDir, "Makefile.core.mk"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -149,8 +184,8 @@ istio-proxy:
 }
 
 func EnvoyTarget(opts TargetOptions) (string, error) {
-	target := "@envoy//source/exe/envoy.stripped"
-	binaryPath := "bazel-bin/source/exe/envoy.stripped"
+	target := "@envoy//source/exe:envoy-static.stripped"
+	binaryPath := "bazel-bin/source/exe/envoy-static.stripped"
 	var boringssl string
 	if opts.FIPSBuild {
 		boringssl = "--define=boringssl=fips"
@@ -164,7 +199,7 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 		opts.EnvoyVersion, opts.EnvoySHA[0:7], runtime.GOARCH)
 	content := `
 envoy:
-	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=%s %s
+	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s
 	mkdir -p /work/out
 	mv %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -172,7 +207,7 @@ envoy:
 	return fmt.Sprintf(content,
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
-		filepath.Join(opts.EnvoyDir, "source", "extensions"),
+		strings.Replace(filepath.Join(opts.EnvoyDir, "source", "extensions"), opts.ProxyDir, "", 1),
 		target,
 
 		// Rename binary.

@@ -153,6 +153,14 @@ func AddMakeTargets(opts TargetOptions) error {
 		return err
 	}
 
+	envoyContribTarget, err := EnvoyContribTarget(opts)
+	if err != nil {
+		return err
+	}
+	if _, err := f.WriteString(envoyContribTarget); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -173,12 +181,18 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 istio-proxy:
 	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s
 	mkdir -p /work/out
+	mv %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
 `
 	return fmt.Sprintf(content,
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
-		target,
+		target+".stripped",
+
+		// Rename binary.
+		binaryPath+".stripped",
+		filepath.Dir(binaryPath),
+
 		targz,
 		filepath.Dir(binaryPath)), nil
 }
@@ -208,6 +222,42 @@ envoy:
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
 		strings.Replace(filepath.Join(opts.EnvoyDir, "source", "extensions"), opts.ProxyDir, "", 1),
+		target,
+
+		// Rename binary.
+		binaryPath,
+		filepath.Dir(binaryPath),
+
+		// tar -czf.
+		targz,
+		filepath.Dir(binaryPath)), nil
+}
+
+func EnvoyContribTarget(opts TargetOptions) (string, error) {
+	target := "@envoy//contrib/exe:envoy-static.stripped"
+	binaryPath := "bazel-bin/external/envoy/contrib/exe/envoy-static.stripped"
+	var boringssl string
+	if opts.FIPSBuild {
+		boringssl = "--define=boringssl=fips"
+	}
+	// Write a WORKSPACE to contrib.
+	if err := os.WriteFile(filepath.Join(opts.EnvoyDir, "contrib", "WORKSPACE"), []byte{}, os.ModePerm); err != nil {
+		return "", err
+	}
+
+	targz := fmt.Sprintf("envoy+contrib-%s-%s-%s.tar.gz",
+		opts.EnvoyVersion, opts.EnvoySHA[0:7], runtime.GOARCH)
+	content := `
+envoy-contrib:
+	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s
+	mkdir -p /work/out
+	mv %s %s/envoy
+	tar -czf /work/out/%s -C %s envoy
+`
+	return fmt.Sprintf(content,
+		boringssl,
+		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
+		strings.Replace(filepath.Join(opts.EnvoyDir, "contrib"), opts.ProxyDir, "", 1),
 		target,
 
 		// Rename binary.

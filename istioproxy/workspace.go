@@ -240,16 +240,14 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 	if opts.FIPSBuild {
 		boringssl = "--define=boringssl=fips"
 	}
-	// Write a WORKSPACE to contrib.
-	if err := os.WriteFile(filepath.Join(opts.EnvoyDir, "contrib", "WORKSPACE"), []byte{}, os.ModePerm); err != nil {
-		return "", err
-	}
+
+	// TODO(dio): Allow to disable some contrib extenstions, since it is problematic with clang-12.
 
 	targz := fmt.Sprintf("envoy+contrib-%s-%s-%s.tar.gz",
 		opts.EnvoyVersion, opts.EnvoySHA[0:7], runtime.GOARCH)
 	content := `
 envoy-contrib:
-	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s
+	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s
 	mkdir -p /work/out
 	mv %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -257,7 +255,6 @@ envoy-contrib:
 	return fmt.Sprintf(content,
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
-		strings.Replace(filepath.Join(opts.EnvoyDir, "contrib"), opts.ProxyDir, "", 1),
 		target,
 
 		// Rename binary.

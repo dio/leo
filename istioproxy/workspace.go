@@ -105,7 +105,7 @@ FROM linux_headers_${TARGETARCH} AS linux_headers
 RUN apt-get update && apt-get install -y --no-install-recommends linux-libc-dev
 
 FROM $IMG
-COPY --from=linux_headers /usr/include/linux /usr/include/
+COPY --from=linux_headers /usr/include/linux/* /usr/include/linux/
 `),
 		os.ModePerm); err != nil {
 		return err

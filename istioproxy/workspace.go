@@ -185,7 +185,7 @@ istio-proxy:
 
 func EnvoyTarget(opts TargetOptions) (string, error) {
 	target := "@envoy//source/exe:envoy-static.stripped"
-	binaryPath := "bazel-bin/source/exe/envoy-static.stripped"
+	binaryPath := "bazel-bin/external/envoy/source/exe/envoy-static.stripped"
 	var boringssl string
 	if opts.FIPSBuild {
 		boringssl = "--define=boringssl=fips"

@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/dio/leo/build"
+	"github.com/dio/leo/compute"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +17,42 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "leo <command> [flags]",
 		Short: "Your artifacts builder",
+	}
+
+	zone         string
+	instanceName string
+
+	computeCmd = &cobra.Command{
+		Use:   "compute <command> [flags]",
+		Short: "Start and stop compute",
+	}
+
+	computeStartCmd = &cobra.Command{
+		Use:   "start [flags]",
+		Short: "Start a compute",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			i := &compute.Instance{
+				ProjectID: os.Getenv("GCLOUD_PROJECT"),
+				Zone:      zone,
+				Name:      instanceName,
+			}
+			return i.Start(cmd.Context())
+		},
+	}
+
+	computeStopCmd = &cobra.Command{
+		Use:   "stop [flags]",
+		Short: "Stop a compute",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			i := &compute.Instance{
+				ProjectID: os.Getenv("GCLOUD_PROJECT"),
+				Zone:      zone,
+				Name:      instanceName,
+			}
+			return i.Stop(cmd.Context())
+		},
 	}
 
 	overrideEnvoy string
@@ -83,21 +120,21 @@ func main() {
 }
 
 func init() {
-	proxyInfoCmd.Flags().StringVar(&overrideEnvoy, "override-envoy", "", "Override Envoy repository. For example: tetratelabs/envoy@88a80e6bbbee56de8c3899c75eaf36c46fad1aa7")
-	proxyInfoCmd.Flags().StringVar(&patchSource, "patch-source", "github://dio/leo", "Patch source. For example: file://patches")
-	proxyInfoCmd.Flags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
-	proxyOutputCmd.Flags().StringVar(&overrideEnvoy, "override-envoy", "", "Override Envoy repository. For example: tetratelabs/envoy@88a80e6bbbee56de8c3899c75eaf36c46fad1aa7")
-	proxyOutputCmd.Flags().StringVar(&patchSource, "patch-source", "github://dio/leo", "Patch source. For example: file://patches")
-	proxyOutputCmd.Flags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
+	computeCmd.PersistentFlags().StringVar(&zone, "zone", "", "Zone")
+	computeCmd.PersistentFlags().StringVar(&instanceName, "instance", "", "Instance name")
+	computeCmd.AddCommand(computeStartCmd)
+	computeCmd.AddCommand(computeStopCmd)
+
+	proxyCmd.PersistentFlags().StringVar(&overrideEnvoy, "override-envoy", "", "Override Envoy repository. For example: tetratelabs/envoy@88a80e6bbbee56de8c3899c75eaf36c46fad1aa7")
+	proxyCmd.PersistentFlags().StringVar(&patchSource, "patch-source", "github://dio/leo", "Patch source. For example: file://patches")
+	proxyCmd.PersistentFlags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
 	proxyOutputCmd.Flags().StringVar(&target, "target", "istio-proxy", "Build target, i.e. envoy, istio-proxy")
 	proxyOutputCmd.Flags().StringVar(&arch, "arch", runtime.GOARCH, "Builder architecture")
-	proxyBuildCmd.Flags().StringVar(&overrideEnvoy, "override-envoy", "", "Override Envoy repository. For example: tetratelabs/envoy@88a80e6bbbee56de8c3899c75eaf36c46fad1aa7")
-	proxyBuildCmd.Flags().StringVar(&patchSource, "patch-source", "github://dio/leo", "Patch source. For example: file://patches")
-	proxyBuildCmd.Flags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
 
 	proxyCmd.AddCommand(proxyInfoCmd)
 	proxyCmd.AddCommand(proxyOutputCmd)
 	proxyCmd.AddCommand(proxyBuildCmd)
 
+	rootCmd.AddCommand(computeCmd)
 	rootCmd.AddCommand(proxyCmd)
 }

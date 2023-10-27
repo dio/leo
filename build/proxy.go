@@ -7,7 +7,12 @@ import (
 	"github.com/dio/leo/patch"
 )
 
-func NewProxyBuilder(target, overrideEnvoy, patchSource string, fipsBuild bool) (*ProxyBuilder, error) {
+type Output struct {
+	Target string
+	Arch   string
+}
+
+func NewProxyBuilder(target, overrideEnvoy, patchSource string, fipsBuild bool, output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 
 	patchGetterSource := patch.Source(patchSource)
@@ -29,6 +34,7 @@ func NewProxyBuilder(target, overrideEnvoy, patchSource string, fipsBuild bool) 
 		envoy:       arg.Version(overrideEnvoy),
 		patchGetter: patchGetter,
 		fipsBuild:   fipsBuild,
+		output:      output,
 	}, nil
 }
 
@@ -37,6 +43,9 @@ type ProxyBuilder struct {
 	envoy       arg.Version
 	patchGetter patch.Getter
 	fipsBuild   bool
+
+	// these are for output
+	output *Output
 }
 
 func (b *ProxyBuilder) Info(ctx context.Context) error {
@@ -49,6 +58,22 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 			FIPSBuild: b.fipsBuild,
 		}
 		return builder.Info(ctx)
+	}
+
+	return nil
+}
+
+func (b *ProxyBuilder) Output(ctx context.Context) error {
+	switch b.target.Name() {
+	case "istio":
+		builder := &IstioProxyBuilder{
+			Version:   b.target.Version(),
+			Envoy:     b.envoy,
+			Patch:     b.patchGetter,
+			FIPSBuild: b.fipsBuild,
+			output:    b.output,
+		}
+		return builder.Output(ctx)
 	}
 
 	return nil

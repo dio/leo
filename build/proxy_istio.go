@@ -2,8 +2,10 @@ package build
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/dio/leo/arg"
@@ -19,6 +21,8 @@ type IstioProxyBuilder struct {
 	Envoy     arg.Version
 	Patch     patch.Getter
 	FIPSBuild bool
+
+	output *Output
 }
 
 func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
@@ -67,6 +71,31 @@ func (b *IstioProxyBuilder) Info(ctx context.Context) error {
   envoyVersion: %s
   fips: %v
 `, istioProxyRef, b.Envoy, envoyVersion, b.FIPSBuild)
+	return nil
+}
+
+func (b *IstioProxyBuilder) Output(ctx context.Context) error {
+	istioProxyRef, envoyVersion, err := b.info(ctx)
+	if err != nil {
+		return err
+	}
+
+	var targzSuffix string
+	if b.FIPSBuild {
+		targzSuffix = "fips-"
+	}
+
+	prefix := path.Join("work", "proxy-"+istioProxyRef, "out")
+
+	switch b.output.Target {
+	case "istio-proxy":
+		fmt.Printf("%s/istio-proxy-%s-%s-%s-%s%s.tar.gz", prefix, b.Version, istioProxyRef[0:7], b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
+	case "envoy":
+		fmt.Printf("%s/envoy-%s-%s-%s%s.tar.gz", prefix, envoyVersion, b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
+	default:
+		return errors.New("invalid target")
+	}
+
 	return nil
 }
 

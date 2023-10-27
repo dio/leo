@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/compute v1.23.2
 	github.com/Masterminds/semver v1.5.0
 	github.com/bazelbuild/buildtools v0.0.0-20231017121127-23aa65d4e117
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/jdxcode/netrc v1.0.0
 	github.com/magefile/mage v1.15.0
 	github.com/mitchellh/go-homedir v1.1.0

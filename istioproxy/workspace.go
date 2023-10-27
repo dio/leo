@@ -74,12 +74,12 @@ func istioProxyEnvoyBinaryTarget(dir string) (string, string, error) {
 	return "//:envoy", "bazel-bin/envoy", nil
 }
 
-func WriteWorkspaceStatus(proxyDir string) error {
+func WriteWorkspaceStatus(proxyDir, envoyName string) error {
 	content := fmt.Sprintf(`#!/bin/bash
 echo "BUILD_SCM_REVISION %s"
-echo "BUILD_SCM_STATUS Distribution"
+echo "BUILD_SCM_STATUS Distro/%s"
 echo "BUILD_CONFIG Release"
-`, strings.TrimPrefix(filepath.Base(proxyDir), "proxy-"))
+`, strings.TrimPrefix(filepath.Base(proxyDir), "proxy-"), envoyName)
 	return os.WriteFile(filepath.Join(proxyDir, "bazel", "bazel_get_workspace_status"), []byte(content), os.ModePerm)
 }
 
@@ -141,6 +141,10 @@ func AddMakeTargets(opts TargetOptions) error {
 		_ = f.Close()
 	}()
 
+	if err := SetEnvoyVersion(opts.EnvoyDir, opts.EnvoySHA); err != nil {
+		return err
+	}
+
 	istioProxyTarget, err := IstioProxyTarget(opts)
 	if err != nil {
 		return err
@@ -168,6 +172,17 @@ func AddMakeTargets(opts TargetOptions) error {
 	return nil
 }
 
+func SetEnvoyVersion(envoyDir, envoySha string) error {
+	versionFile := filepath.Join(envoyDir, "VERSION.txt")
+	v, err := os.ReadFile(versionFile)
+	if err != nil {
+		return err
+	}
+	// We replace e.g. 1.21.0-dev with 1.21.0-shortcommit.
+	return os.WriteFile(versionFile,
+		[]byte(strings.Replace(string(v), "-dev", "-"+envoySha[0:7], 1)), os.ModePerm)
+}
+
 func IstioProxyTarget(opts TargetOptions) (string, error) {
 	target, binaryPath, err := istioProxyEnvoyBinaryTarget(opts.ProxyDir)
 	if err != nil {
@@ -179,8 +194,12 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 		boringssl = "--define=boringssl=fips"
 	}
 
-	targz := fmt.Sprintf("istio-proxy-%s-%s-%s-%s.tar.gz",
-		opts.IstioVersion, opts.ProxySHA[0:7], opts.EnvoySHA[0:7], runtime.GOARCH)
+	var targzSuffix string
+	if opts.FIPSBuild {
+		targzSuffix = "fips-"
+	}
+	targz := fmt.Sprintf("istio-proxy-%s-%s-%s-%s%s.tar.gz",
+		opts.IstioVersion, opts.ProxySHA[0:7], opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 istio-proxy:
 	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s
@@ -213,8 +232,12 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 		return "", err
 	}
 
-	targz := fmt.Sprintf("envoy-%s-%s-%s.tar.gz",
-		opts.EnvoyVersion, opts.EnvoySHA[0:7], runtime.GOARCH)
+	var targzSuffix string
+	if opts.FIPSBuild {
+		targzSuffix = "fips-"
+	}
+	targz := fmt.Sprintf("envoy-%s-%s-%s%s.tar.gz",
+		opts.EnvoyVersion, opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 envoy:
 	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s
@@ -247,8 +270,12 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 
 	// TODO(dio): Allow to disable some contrib extenstions, since it is problematic with clang-12.
 
-	targz := fmt.Sprintf("envoy+contrib-%s-%s-%s.tar.gz",
-		opts.EnvoyVersion, opts.EnvoySHA[0:7], runtime.GOARCH)
+	var targzSuffix string
+	if opts.FIPSBuild {
+		targzSuffix = "fips-"
+	}
+	targz := fmt.Sprintf("envoy+contrib-%s-%s-%s%s.tar.gz",
+		opts.EnvoyVersion, opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 envoy-contrib:
 	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s

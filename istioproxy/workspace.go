@@ -103,14 +103,14 @@ func PrepareBuilder(proxyDir string) error {
 		[]byte(`# Generated.
 ARG IMG
 
-FROM ubuntu:18.04 AS linux_headers_amd64
+FROM ubuntu:20.04 AS linux_headers_amd64
 FROM ubuntu:20.04 AS linux_headers_arm64
 
 FROM linux_headers_${TARGETARCH} AS linux_headers
 RUN apt-get update && apt-get install -y --no-install-recommends linux-libc-dev
 
 FROM $IMG
-COPY --from=linux_headers /usr/include/linux/* /usr/include/linux/
+COPY --from=linux_headers /usr/include/linux/tcp.h /usr/include/linux/tcp.h
 `),
 		os.ModePerm); err != nil {
 		return err

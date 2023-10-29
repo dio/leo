@@ -90,6 +90,7 @@ type TargetOptions struct {
 	EnvoySHA     string
 	IstioVersion string
 	EnvoyVersion string
+	RemoteCache  string // Remote cache values: us-central1 or asia-south2.
 	FIPSBuild    bool
 }
 
@@ -178,15 +179,24 @@ func SetEnvoyVersion(envoyDir, envoySha string) error {
 	if err != nil {
 		return err
 	}
-	// We replace e.g. 1.21.0-dev with 1.21.0-shortcommit.
-	return os.WriteFile(versionFile,
-		[]byte(strings.Replace(string(v), "-dev", "-"+envoySha[0:7], 1)), os.ModePerm)
+	versionTxt := strings.TrimSpace(string(v))
+
+	// Trim -dev suffix.
+	version := strings.TrimSuffix(versionTxt, "-dev")
+
+	// We replace e.g. 1.21.0-dev with 1.21.0+shortcommit.
+	return os.WriteFile(versionFile, []byte(version+"+"+envoySha[0:7]), os.ModePerm)
 }
 
 func IstioProxyTarget(opts TargetOptions) (string, error) {
 	target, binaryPath, err := istioProxyEnvoyBinaryTarget(opts.ProxyDir)
 	if err != nil {
 		return "", err
+	}
+
+	var remoteCache string
+	if len(opts.RemoteCache) > 0 {
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
 	}
 
 	var boringssl string
@@ -202,7 +212,7 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 		opts.IstioVersion, opts.ProxySHA[0:7], opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 istio-proxy:
-	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s
+	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -211,6 +221,7 @@ istio-proxy:
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
 		target+".stripped",
+		remoteCache,
 
 		// Rename binary.
 		binaryPath+".stripped",
@@ -223,6 +234,11 @@ istio-proxy:
 func EnvoyTarget(opts TargetOptions) (string, error) {
 	target := "@envoy//source/exe:envoy-static.stripped"
 	binaryPath := "bazel-bin/external/envoy/source/exe/envoy-static.stripped"
+	var remoteCache string
+	if len(opts.RemoteCache) > 0 {
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
+	}
+
 	var boringssl string
 	if opts.FIPSBuild {
 		boringssl = "--define=boringssl=fips"
@@ -240,7 +256,7 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 		opts.EnvoyVersion, opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 envoy:
-	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s
+	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -250,6 +266,7 @@ envoy:
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
 		strings.Replace(filepath.Join(opts.EnvoyDir, "source", "extensions"), opts.ProxyDir, "", 1),
 		target,
+		remoteCache,
 
 		// Rename binary.
 		binaryPath,
@@ -263,6 +280,11 @@ envoy:
 func EnvoyContribTarget(opts TargetOptions) (string, error) {
 	target := "@envoy//contrib/exe:envoy-static.stripped"
 	binaryPath := "bazel-bin/external/envoy/contrib/exe/envoy-static.stripped"
+	var remoteCache string
+	if len(opts.RemoteCache) > 0 {
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
+	}
+
 	var boringssl string
 	if opts.FIPSBuild {
 		boringssl = "--define=boringssl=fips"
@@ -278,7 +300,7 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 		opts.EnvoyVersion, opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 envoy-contrib:
-	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s
+	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -287,6 +309,7 @@ envoy-contrib:
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
 		target,
+		remoteCache,
 
 		// Rename binary.
 		binaryPath,

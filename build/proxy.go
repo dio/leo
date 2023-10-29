@@ -12,7 +12,7 @@ type Output struct {
 	Arch   string
 }
 
-func NewProxyBuilder(target, overrideEnvoy, patchSource string, fipsBuild bool, output *Output) (*ProxyBuilder, error) {
+func NewProxyBuilder(target, overrideEnvoy, patchSource, remoteCache string, fipsBuild bool, output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 
 	patchGetterSource := patch.Source(patchSource)
@@ -35,6 +35,7 @@ func NewProxyBuilder(target, overrideEnvoy, patchSource string, fipsBuild bool, 
 		patchGetter: patchGetter,
 		fipsBuild:   fipsBuild,
 		output:      output,
+		remoteCache: remoteCache,
 	}, nil
 }
 
@@ -43,6 +44,7 @@ type ProxyBuilder struct {
 	envoy       arg.Version
 	patchGetter patch.Getter
 	fipsBuild   bool
+	remoteCache string
 
 	// these are for output
 	output *Output
@@ -52,10 +54,11 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 	switch b.target.Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Version:   b.target.Version(),
-			Envoy:     b.envoy,
-			Patch:     b.patchGetter,
-			FIPSBuild: b.fipsBuild,
+			Version:     b.target.Version(),
+			Envoy:       b.envoy,
+			Patch:       b.patchGetter,
+			FIPSBuild:   b.fipsBuild,
+			remoteCache: b.remoteCache,
 		}
 		return builder.Info(ctx)
 	}
@@ -67,11 +70,12 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 	switch b.target.Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Version:   b.target.Version(),
-			Envoy:     b.envoy,
-			Patch:     b.patchGetter,
-			FIPSBuild: b.fipsBuild,
-			output:    b.output,
+			Version:     b.target.Version(),
+			Envoy:       b.envoy,
+			Patch:       b.patchGetter,
+			FIPSBuild:   b.fipsBuild,
+			output:      b.output,
+			remoteCache: b.remoteCache,
 		}
 		return builder.Output(ctx)
 	}
@@ -83,10 +87,11 @@ func (b *ProxyBuilder) Build(ctx context.Context) error {
 	switch b.target.Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Version:   b.target.Version(),
-			Envoy:     b.envoy,
-			Patch:     b.patchGetter,
-			FIPSBuild: b.fipsBuild,
+			Version:     b.target.Version(),
+			Envoy:       b.envoy,
+			Patch:       b.patchGetter,
+			FIPSBuild:   b.fipsBuild,
+			remoteCache: b.remoteCache,
 		}
 		return builder.Build(ctx)
 	}

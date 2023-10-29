@@ -22,7 +22,8 @@ type IstioProxyBuilder struct {
 	Patch     patch.Getter
 	FIPSBuild bool
 
-	output *Output
+	remoteCache string
+	output      *Output
 }
 
 func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
@@ -150,6 +151,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		EnvoyVersion: strings.TrimSuffix(envoyVersion, "-dev"),
 		IstioVersion: b.Version,
 		FIPSBuild:    b.FIPSBuild,
+		RemoteCache:  b.remoteCache,
 	}); err != nil {
 		return err
 	}

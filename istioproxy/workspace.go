@@ -84,7 +84,7 @@ echo "BUILD_CONFIG Release"
 }
 
 func WriteWorkspaceStatus(proxyDir, envoyName, envoySHA string) error {
-	if err := writeNamedWorkspaceStatus("istio-proxy", strings.TrimPrefix(filepath.Base(proxyDir), "proxy-"), envoyName, proxyDir); err != nil {
+	if err := writeNamedWorkspaceStatus("istio-proxy", strings.TrimPrefix(filepath.Base(proxyDir), "proxy-"), "istio/proxy", proxyDir); err != nil {
 		return err
 	}
 

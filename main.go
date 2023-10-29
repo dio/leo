@@ -56,7 +56,7 @@ var (
 				if err != nil {
 					return err
 				}
-				fmt.Print("istio@", target, " ", "--override-envoy="+args[0])
+				fmt.Print("istio@", target)
 			}
 			return nil
 		},

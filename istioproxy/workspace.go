@@ -173,6 +173,25 @@ func AddMakeTargets(opts TargetOptions) error {
 	return nil
 }
 
+const configLibcxx = "build --config=libc++"
+
+func buildConfigFlags(proxyDir string) (string, error) {
+	// build --config=libc++20
+	data, err := os.ReadFile(filepath.Join(proxyDir, ".bazelrc"))
+	if err != nil {
+		return "", err
+	}
+	text := string(data)
+	// When "configLibcxx" is enabled in proxy's .bazelrc, we don't need to specify it again.
+	// This to remedy: WARNING: The following configs were expanded more than once: [libc++, clang]. For repeatable flags, repeats are counted twice and may lead to unexpected behavior.
+	if strings.Contains(text, configLibcxx) {
+		return "--config=release", nil
+	}
+
+	// For older version, we need to explicitly enable --config=libc++.
+	return "--config=release --config=libc++", nil
+}
+
 func SetEnvoyVersion(envoyDir, envoySha string) error {
 	versionFile := filepath.Join(envoyDir, "VERSION.txt")
 	v, err := os.ReadFile(versionFile)
@@ -190,6 +209,11 @@ func SetEnvoyVersion(envoyDir, envoySha string) error {
 
 func IstioProxyTarget(opts TargetOptions) (string, error) {
 	target, binaryPath, err := istioProxyEnvoyBinaryTarget(opts.ProxyDir)
+	if err != nil {
+		return "", err
+	}
+
+	buildConfig, err := buildConfigFlags(opts.ProxyDir)
 	if err != nil {
 		return "", err
 	}
@@ -212,12 +236,13 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 		opts.IstioVersion, opts.ProxySHA[0:7], opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 istio-proxy:
-	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
 `
 	return fmt.Sprintf(content,
+		buildConfig,
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
 		target+".stripped",
@@ -239,6 +264,11 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
 	}
 
+	buildConfig, err := buildConfigFlags(opts.ProxyDir)
+	if err != nil {
+		return "", err
+	}
+
 	var boringssl string
 	if opts.FIPSBuild {
 		boringssl = "--define=boringssl=fips"
@@ -256,12 +286,13 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 		opts.EnvoyVersion, opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 envoy:
-	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
 `
 	return fmt.Sprintf(content,
+		buildConfig,
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
 		strings.Replace(filepath.Join(opts.EnvoyDir, "source", "extensions"), opts.ProxyDir, "", 1),
@@ -285,6 +316,11 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
 	}
 
+	buildConfig, err := buildConfigFlags(opts.ProxyDir)
+	if err != nil {
+		return "", err
+	}
+
 	var boringssl string
 	if opts.FIPSBuild {
 		boringssl = "--define=boringssl=fips"
@@ -300,12 +336,13 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 		opts.EnvoyVersion, opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 envoy-contrib:
-	bazel build --config=release --config=libc++ %s --stamp --override_repository=envoy=/work%s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
 `
 	return fmt.Sprintf(content,
+		buildConfig,
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
 		target,

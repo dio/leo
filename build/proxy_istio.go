@@ -88,11 +88,14 @@ func (b *IstioProxyBuilder) Output(ctx context.Context) error {
 
 	prefix := path.Join("work", "proxy-"+istioProxyRef, "out")
 
+	// TODO(dio): Synchronize this with the make targets.
 	switch b.output.Target {
 	case "istio-proxy":
 		fmt.Printf("%s/istio-proxy-%s-%s-%s-%s%s.tar.gz", prefix, b.Version, istioProxyRef[0:7], b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
 	case "envoy":
 		fmt.Printf("%s/envoy-%s-%s-%s%s.tar.gz", prefix, envoyVersion, b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
+	case "envoy-contrib":
+		fmt.Printf("%s/envoy-contrib-%s-%s-%s%s.tar.gz", prefix, envoyVersion, b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
 	default:
 		return errors.New("invalid target")
 	}
@@ -148,7 +151,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		ProxySHA:     istioProxyRef,
 		EnvoyDir:     envoyDir,
 		EnvoySHA:     b.Envoy.Version(),
-		EnvoyVersion: strings.TrimSuffix(envoyVersion, "-dev"),
+		EnvoyVersion: envoyVersion,
 		IstioVersion: b.Version,
 		FIPSBuild:    b.FIPSBuild,
 		RemoteCache:  b.remoteCache,

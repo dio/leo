@@ -1,15 +1,75 @@
 package github
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/dio/leo/env"
 	"github.com/magefile/mage/sh"
 )
+
+type Release struct {
+	TagName string `json:"tag_name"`
+}
+
+func GetReleases(repo string, page int) ([]Release, error) {
+	// https://api.github.com/repos/istio/istio/releases?page=1
+	args := []string{
+		"-fsSL",
+		"-H", "Accept: application/vnd.github.v3.json",
+		fmt.Sprintf("https://api.github.com/repos/%s/releases?page=%d", repo, page),
+	}
+	args = append(args, token()...)
+
+	out, err := sh.Output("curl", args...)
+	if err != nil {
+		return nil, err
+	}
+
+	releases := make([]Release, 0)
+	if err := json.Unmarshal([]byte(out), &releases); err != nil {
+		return nil, err
+	}
+	return releases, nil
+}
+
+var (
+	pagePattern = `page=(\d+)`
+	pageRe      = regexp.MustCompile(pagePattern)
+)
+
+func GetLastReleasePageNumber(repo string) (int, error) {
+	args := []string{
+		"-fsSLI",
+		"-H", "Accept: application/vnd.github.v3.json",
+		fmt.Sprintf("https://api.github.com/repos/%s/releases", repo),
+	}
+	args = append(args, token()...)
+
+	out, err := sh.Output("curl", args...)
+	if err != nil {
+		return 0, err
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(out))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "link:") {
+			matches := pageRe.FindAllStringSubmatch(line, -1)
+			page := matches[len(matches)-1][1]
+			return strconv.Atoi(page)
+		}
+	}
+
+	return 0, nil
+}
 
 func GetRaw(repo, file, ref string) (string, error) {
 	args := []string{

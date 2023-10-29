@@ -8,8 +8,10 @@ import (
 	"runtime"
 	"syscall"
 
+	"github.com/dio/leo/arg"
 	"github.com/dio/leo/build"
 	"github.com/dio/leo/compute"
+	"github.com/dio/leo/envoy"
 	"github.com/spf13/cobra"
 )
 
@@ -38,6 +40,25 @@ var (
 				Name:      instanceName,
 			}
 			return i.Start(cmd.Context())
+		},
+	}
+
+	resolveCmd = &cobra.Command{
+		Use:   "resolve [flags]",
+		Short: "Resolve workspace from a reference",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			v := arg.Version(args[0])
+			r := arg.Repo(v.Name())
+			switch r.Name() {
+			case "envoy":
+				target, err := envoy.ResolveWorkspace(v)
+				if err != nil {
+					return err
+				}
+				fmt.Print("istio@", target, " ", "--override-envoy="+args[0])
+			}
+			return nil
 		},
 	}
 
@@ -139,4 +160,5 @@ func init() {
 
 	rootCmd.AddCommand(computeCmd)
 	rootCmd.AddCommand(proxyCmd)
+	rootCmd.AddCommand(resolveCmd)
 }

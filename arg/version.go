@@ -27,7 +27,10 @@ func (v Version) Version() string {
 
 func (v Version) VersionV() string {
 	parts := v.parse()
-	return "v" + parts[1]
+	if !strings.HasPrefix(parts[1], "v") {
+		return "v" + parts[1]
+	}
+	return parts[1]
 }
 
 func (v Version) parse() []string {

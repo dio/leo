@@ -139,7 +139,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		return err
 	}
 
-	if err := istioproxy.WriteWorkspaceStatus(istioProxyDir, b.Envoy.Name()); err != nil {
+	if err := istioproxy.WriteWorkspaceStatus(istioProxyDir, b.Envoy.Name(), b.Envoy.Version()); err != nil {
 		return err
 	}
 

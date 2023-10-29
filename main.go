@@ -56,7 +56,7 @@ var (
 				if err != nil {
 					return err
 				}
-				fmt.Print("istio@", target)
+				fmt.Print(target)
 			}
 			return nil
 		},

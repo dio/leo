@@ -235,7 +235,7 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 	if opts.FIPSBuild {
 		targzSuffix = "-fips"
 	}
-	targz := "istio-proxy" + targzSuffix + ".tar.gz"
+	targz := "istio-proxy" + targzSuffix + "-" + runtime.GOARCH + ".tar.gz"
 	content := `
 istio-proxy-status:
 	cp -f bazel/bazel_get_workspace_status_istio-proxy bazel/bazel_get_workspace_status
@@ -293,7 +293,7 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 	if opts.FIPSBuild {
 		targzSuffix = "-fips"
 	}
-	targz := "envoy" + targzSuffix + ".tar.gz"
+	targz := "envoy" + targzSuffix + "-" + runtime.GOARCH + ".tar.gz"
 	content := `
 envoy-status:
 	cp -f bazel/bazel_get_workspace_status_envoy bazel/bazel_get_workspace_status
@@ -351,7 +351,7 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 	if opts.FIPSBuild {
 		targzSuffix = "-fips"
 	}
-	targz := "envoy-contrib" + targzSuffix + ".tar.gz"
+	targz := "envoy-contrib" + targzSuffix + "-" + runtime.GOARCH + ".tar.gz"
 	content := `
 envoy-contrib-status:
 	cp -f bazel/bazel_get_workspace_status_envoy-contrib bazel/bazel_get_workspace_status

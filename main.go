@@ -84,6 +84,7 @@ var (
 	arch          string
 	version       string
 	repo          string
+	dir           string
 
 	proxyCmd = &cobra.Command{
 		Use:   "proxy <command> [flags]",
@@ -128,6 +129,7 @@ var (
 				Target: target,
 				Arch:   arch,
 				Repo:   repo,
+				Dir:    dir,
 			})
 			if err != nil {
 				return err
@@ -184,6 +186,7 @@ func init() {
 	proxyOutputCmd.Flags().StringVar(&arch, "arch", runtime.GOARCH, "Builder architecture")
 	proxyReleaseCmd.Flags().StringVar(&target, "target", "istio-proxy", "Build target, i.e. envoy, istio-proxy")
 	proxyReleaseCmd.Flags().StringVar(&repo, "repo", "tetrateio/proxy-archives", "Archives repo")
+	proxyReleaseCmd.Flags().StringVar(&dir, "dir", "./out", "Assets directory")
 
 	proxyCmd.AddCommand(proxyInfoCmd)
 	proxyCmd.AddCommand(proxyOutputCmd)

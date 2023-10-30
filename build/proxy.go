@@ -11,6 +11,7 @@ type Output struct {
 	Target string
 	Arch   string
 	Repo   string
+	Dir    string
 }
 
 func NewProxyBuilder(target, overrideEnvoy, patchSource, remoteCache string, fipsBuild bool, output *Output) (*ProxyBuilder, error) {

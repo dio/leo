@@ -115,7 +115,7 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		title = b.Envoy.Name() + b.Envoy.Version()[0:7]
 	}
 
-	out := path.Join("work", "proxy-"+istioProxyRef, "out", "*.tar.gz")
+	out := path.Join(b.output.Dir, "*.tar.gz")
 	files, err := filepath.Glob(out)
 	if err != nil {
 		return err

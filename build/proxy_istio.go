@@ -27,6 +27,12 @@ type IstioProxyBuilder struct {
 }
 
 func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
+	istioRef, err := github.ResolveCommitSHA("istio/istio", b.Version)
+	if err != nil {
+		return "", "", err
+	}
+	b.Version = istioRef
+
 	deps, err := istio.GetDeps(b.Version)
 	if err != nil {
 		return "", "", err
@@ -57,7 +63,6 @@ func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
 		return "", "", err
 	}
 	return istioProxyRef, envoyVersion, err
-
 }
 
 func (b *IstioProxyBuilder) Info(ctx context.Context) error {
@@ -91,7 +96,7 @@ func (b *IstioProxyBuilder) Output(ctx context.Context) error {
 	// TODO(dio): Synchronize this with the make targets.
 	switch b.output.Target {
 	case "istio-proxy":
-		fmt.Printf("%s/istio-proxy-%s-%s-%s-%s%s.tar.gz", prefix, b.Version, istioProxyRef[0:7], b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
+		fmt.Printf("%s/istio-proxy-%s-%s-%s-%s%s.tar.gz", prefix, b.Version[0:7], istioProxyRef[0:7], b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
 	case "envoy":
 		fmt.Printf("%s/envoy-%s-%s-%s%s.tar.gz", prefix, envoyVersion, b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
 	case "envoy-contrib":

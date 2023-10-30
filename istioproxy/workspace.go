@@ -230,7 +230,7 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 		targzSuffix = "fips-"
 	}
 	targz := fmt.Sprintf("istio-proxy-%s-%s-%s-%s%s.tar.gz",
-		opts.IstioVersion, opts.ProxySHA[0:7], opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
+		opts.IstioVersion[0:7], opts.ProxySHA[0:7], opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 istio-proxy-status:
 	cp -f bazel/bazel_get_workspace_status_istio-proxy bazel/bazel_get_workspace_status

@@ -140,6 +140,27 @@ func getRefSHA(repo, ref, refType string) (string, error) {
 	if err := json.Unmarshal([]byte(out), &r); err != nil {
 		return "", err
 	}
+
+	if refType != "tags" {
+		return r.Object.SHA, nil
+	}
+
+	// When the refType is tags, we need to resolve it once again.
+	args = []string{
+		"-fsSL",
+		"-H", "Accept: application/vnd.github.v3.json",
+		fmt.Sprintf("https://api.github.com/repos/%s/git/tags/%s", repo, r.Object.SHA),
+	}
+	args = append(args, token()...)
+
+	out, err = sh.Output("curl", args...)
+	if err != nil {
+		return "", err
+	}
+
+	if err := json.Unmarshal([]byte(out), &r); err != nil {
+		return "", err
+	}
 	return r.Object.SHA, nil
 }
 

@@ -225,6 +225,11 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 		boringssl = "--define=boringssl=fips"
 	}
 
+	var ldLibraryPath string
+	if runtime.GOARCH == "amd64" {
+		ldLibraryPath = "--action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu --host_action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu"
+	}
+
 	var targzSuffix string
 	if opts.FIPSBuild {
 		targzSuffix = "fips-"
@@ -236,7 +241,7 @@ istio-proxy-status:
 	cp -f bazel/bazel_get_workspace_status_istio-proxy bazel/bazel_get_workspace_status
 
 istio-proxy: istio-proxy-status
-	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -247,6 +252,7 @@ istio-proxy: istio-proxy-status
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
 		target+".stripped",
 		remoteCache,
+		ldLibraryPath,
 
 		// Rename binary.
 		binaryPath+".stripped",
@@ -278,6 +284,11 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 		return "", err
 	}
 
+	var ldLibraryPath string
+	if runtime.GOARCH == "amd64" {
+		ldLibraryPath = "--action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu --host_action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu"
+	}
+
 	var targzSuffix string
 	if opts.FIPSBuild {
 		targzSuffix = "fips-"
@@ -289,7 +300,7 @@ envoy-status:
 	cp -f bazel/bazel_get_workspace_status_envoy bazel/bazel_get_workspace_status
 
 envoy: envoy-status
-	bazel build %s %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -301,6 +312,7 @@ envoy: envoy-status
 		strings.Replace(filepath.Join(opts.EnvoyDir, "source", "extensions"), opts.ProxyDir, "", 1),
 		target,
 		remoteCache,
+		ldLibraryPath,
 
 		// Rename binary.
 		binaryPath,
@@ -329,6 +341,11 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 		boringssl = "--define=boringssl=fips"
 	}
 
+	var ldLibraryPath string
+	if runtime.GOARCH == "amd64" {
+		ldLibraryPath = "--action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu --host_action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu"
+	}
+
 	// TODO(dio): Allow to disable some contrib extenstions, since it is problematic with clang-12.
 
 	var targzSuffix string
@@ -342,7 +359,7 @@ envoy-contrib-status:
 	cp -f bazel/bazel_get_workspace_status_envoy-contrib bazel/bazel_get_workspace_status
 
 envoy-contrib: envoy-contrib-status
-	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -353,6 +370,7 @@ envoy-contrib: envoy-contrib-status
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
 		target,
 		remoteCache,
+		ldLibraryPath,
 
 		// Rename binary.
 		binaryPath,

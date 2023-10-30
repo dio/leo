@@ -30,21 +30,32 @@ type GitHubGetter struct {
 }
 
 func (g GitHubGetter) Get(info Info) ([]byte, error) {
+	idx := strings.LastIndex(info.Ref, ".")
+	minorName := info.Ref[0:idx]
+
+	// E.g. 1.29.0-fips.patch.
 	patchFile := info.Ref + info.Suffix + ".patch"
 	content, err := github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
 
+	// We search for minor with suffix. E.g. 1.29-fips.patch.
+	patchFile = minorName + info.Suffix + ".patch"
+	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
+	if err == nil {
+		return []byte(content + "\n"), nil
+	}
+
+	// E.g. 1.29.0.patch.
 	patchFile = info.Ref + ".patch"
 	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
 
-	// We search for minor.
-	idx := strings.LastIndex(info.Ref, ".")
-	patchFile = info.Ref[0:idx] + ".patch"
+	// We search for minor. E.g. 1.29.patch.
+	patchFile = minorName + ".patch"
 	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
@@ -69,7 +80,18 @@ func (g FSGetter) Get(info Info) ([]byte, error) {
 		if entry.IsDir() {
 			continue
 		}
+		idx := strings.LastIndex(info.Ref, ".")
+		minorName := info.Ref[0:idx]
+
 		patchFile := info.Ref + info.Suffix + ".patch"
+		if entry.Name() == patchFile { // For example -fips.
+			content, err = os.ReadFile(filepath.Join(baseDir, patchFile))
+			if err == nil {
+				return content, nil
+			}
+		}
+
+		patchFile = minorName + info.Suffix + ".patch"
 		if entry.Name() == patchFile { // For example -fips.
 			content, err = os.ReadFile(filepath.Join(baseDir, patchFile))
 			if err == nil {
@@ -86,8 +108,7 @@ func (g FSGetter) Get(info Info) ([]byte, error) {
 		}
 
 		// We search for minor.
-		idx := strings.LastIndex(info.Ref, ".")
-		patchFile = info.Ref[0:idx] + ".patch"
+		patchFile = minorName + ".patch"
 		if entry.Name() == patchFile {
 			content, err = os.ReadFile(filepath.Join(baseDir, patchFile))
 			if err == nil {
@@ -111,7 +132,7 @@ func Apply(info Info, patchGetter Getter, dst string) error {
 	}
 	defer func() {
 		_ = patchFile.Close()
-		// _ = os.Remove(patchFile.Name())
+		_ = os.Remove(patchFile.Name())
 	}()
 
 	_, err = patchFile.Write(patchData)

@@ -82,6 +82,7 @@ var (
 	remoteCache   string
 	target        string
 	arch          string
+	version       string
 
 	proxyCmd = &cobra.Command{
 		Use:   "proxy <command> [flags]",
@@ -129,6 +130,16 @@ var (
 			return builder.Build(cmd.Context())
 		},
 	}
+
+	versionCmd = &cobra.Command{
+		Use:   "version",
+		Short: "Version",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("leo", version)
+			return nil
+		},
+	}
 )
 
 func main() {
@@ -161,4 +172,5 @@ func init() {
 	rootCmd.AddCommand(computeCmd)
 	rootCmd.AddCommand(proxyCmd)
 	rootCmd.AddCommand(resolveCmd)
+	rootCmd.AddCommand(versionCmd)
 }

@@ -335,7 +335,7 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 	if opts.FIPSBuild {
 		targzSuffix = "fips-"
 	}
-	targz := fmt.Sprintf("envoy+contrib-%s-%s-%s%s.tar.gz",
+	targz := fmt.Sprintf("envoy-contrib-%s-%s-%s%s.tar.gz",
 		opts.EnvoyVersion, opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
 	content := `
 envoy-contrib-status:

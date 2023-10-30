@@ -1,7 +1,6 @@
 package patch
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 	"path"
@@ -38,7 +37,6 @@ func (g GitHubGetter) Get(info Info) ([]byte, error) {
 	patchFile := info.Ref + info.Suffix + ".patch"
 	content, err := github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
-		fmt.Println("patched", patchFile)
 		return []byte(content + "\n"), nil
 	}
 
@@ -46,7 +44,6 @@ func (g GitHubGetter) Get(info Info) ([]byte, error) {
 	patchFile = minorName + info.Suffix + ".patch"
 	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
-		fmt.Println("patched", patchFile)
 		return []byte(content + "\n"), nil
 	}
 
@@ -54,7 +51,6 @@ func (g GitHubGetter) Get(info Info) ([]byte, error) {
 	patchFile = info.Ref + ".patch"
 	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
-		fmt.Println("patched", patchFile)
 		return []byte(content + "\n"), nil
 	}
 
@@ -62,7 +58,6 @@ func (g GitHubGetter) Get(info Info) ([]byte, error) {
 	patchFile = minorName + ".patch"
 	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
-		fmt.Println("patched", patchFile)
 		return []byte(content + "\n"), nil
 	}
 

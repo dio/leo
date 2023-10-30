@@ -108,6 +108,7 @@ type TargetOptions struct {
 	EnvoyVersion string
 	RemoteCache  string // Remote cache values: us-central1 or asia-south2.
 	FIPSBuild    bool
+	EnvoyRepo    string
 }
 
 func PrepareBuilder(proxyDir string) error {
@@ -232,10 +233,9 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 
 	var targzSuffix string
 	if opts.FIPSBuild {
-		targzSuffix = "fips-"
+		targzSuffix = "-fips"
 	}
-	targz := fmt.Sprintf("istio-proxy-%s-%s-%s-%s%s.tar.gz",
-		opts.IstioVersion[0:7], opts.ProxySHA[0:7], opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
+	targz := "istio-proxy" + targzSuffix + ".tar.gz"
 	content := `
 istio-proxy-status:
 	cp -f bazel/bazel_get_workspace_status_istio-proxy bazel/bazel_get_workspace_status
@@ -291,10 +291,9 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 
 	var targzSuffix string
 	if opts.FIPSBuild {
-		targzSuffix = "fips-"
+		targzSuffix = "-fips"
 	}
-	targz := fmt.Sprintf("envoy-%s-%s-%s%s.tar.gz",
-		opts.EnvoyVersion, opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
+	targz := "envoy" + targzSuffix + ".tar.gz"
 	content := `
 envoy-status:
 	cp -f bazel/bazel_get_workspace_status_envoy bazel/bazel_get_workspace_status
@@ -350,10 +349,9 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 
 	var targzSuffix string
 	if opts.FIPSBuild {
-		targzSuffix = "fips-"
+		targzSuffix = "-fips"
 	}
-	targz := fmt.Sprintf("envoy-contrib-%s-%s-%s%s.tar.gz",
-		opts.EnvoyVersion, opts.EnvoySHA[0:7], targzSuffix, runtime.GOARCH)
+	targz := "envoy-contrib" + targzSuffix + ".tar.gz"
 	content := `
 envoy-contrib-status:
 	cp -f bazel/bazel_get_workspace_status_envoy-contrib bazel/bazel_get_workspace_status

@@ -83,6 +83,7 @@ var (
 	target        string
 	arch          string
 	version       string
+	repo          string
 
 	proxyCmd = &cobra.Command{
 		Use:   "proxy <command> [flags]",
@@ -115,6 +116,23 @@ var (
 				return err
 			}
 			return builder.Output(cmd.Context())
+		},
+	}
+
+	proxyReleaseCmd = &cobra.Command{
+		Use:   "release [flags]",
+		Short: "Proxy release",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			builder, err := build.NewProxyBuilder(args[0], overrideEnvoy, patchSource, remoteCache, fipsBuild, &build.Output{
+				Target: target,
+				Arch:   arch,
+				Repo:   repo,
+			})
+			if err != nil {
+				return err
+			}
+			return builder.Release(cmd.Context())
 		},
 	}
 
@@ -164,10 +182,13 @@ func init() {
 	proxyCmd.PersistentFlags().StringVar(&remoteCache, "remote-cache", "", "Remote cache. E.g. us-central1, asia-south2")
 	proxyOutputCmd.Flags().StringVar(&target, "target", "istio-proxy", "Build target, i.e. envoy, istio-proxy")
 	proxyOutputCmd.Flags().StringVar(&arch, "arch", runtime.GOARCH, "Builder architecture")
+	proxyReleaseCmd.Flags().StringVar(&target, "target", "istio-proxy", "Build target, i.e. envoy, istio-proxy")
+	proxyReleaseCmd.Flags().StringVar(&repo, "repo", "tis-archives", "Archives repo")
 
 	proxyCmd.AddCommand(proxyInfoCmd)
 	proxyCmd.AddCommand(proxyOutputCmd)
 	proxyCmd.AddCommand(proxyBuildCmd)
+	proxyCmd.AddCommand(proxyReleaseCmd)
 
 	rootCmd.AddCommand(computeCmd)
 	rootCmd.AddCommand(proxyCmd)

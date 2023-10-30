@@ -10,6 +10,7 @@ import (
 type Output struct {
 	Target string
 	Arch   string
+	Repo   string
 }
 
 func NewProxyBuilder(target, overrideEnvoy, patchSource, remoteCache string, fipsBuild bool, output *Output) (*ProxyBuilder, error) {
@@ -78,6 +79,23 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 			remoteCache: b.remoteCache,
 		}
 		return builder.Output(ctx)
+	}
+
+	return nil
+}
+
+func (b *ProxyBuilder) Release(ctx context.Context) error {
+	switch b.target.Name() {
+	case "istio":
+		builder := &IstioProxyBuilder{
+			Version:     b.target.Version(),
+			Envoy:       b.envoy,
+			Patch:       b.patchGetter,
+			FIPSBuild:   b.fipsBuild,
+			output:      b.output,
+			remoteCache: b.remoteCache,
+		}
+		return builder.Release(ctx)
 	}
 
 	return nil

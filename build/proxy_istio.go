@@ -2,10 +2,10 @@ package build
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/dio/leo/arg"
@@ -14,6 +14,7 @@ import (
 	"github.com/dio/leo/istioproxy"
 	"github.com/dio/leo/patch"
 	"github.com/dio/leo/utils"
+	"github.com/magefile/mage/sh"
 )
 
 type IstioProxyBuilder struct {
@@ -81,30 +82,58 @@ func (b *IstioProxyBuilder) Info(ctx context.Context) error {
 }
 
 func (b *IstioProxyBuilder) Output(ctx context.Context) error {
-	istioProxyRef, envoyVersion, err := b.info(ctx)
+	istioProxyRef, _, err := b.info(ctx)
 	if err != nil {
 		return err
 	}
 
-	var targzSuffix string
-	if b.FIPSBuild {
-		targzSuffix = "fips-"
+	out := path.Join("work", "proxy-"+istioProxyRef, "out", "*.tar.gz")
+	fmt.Print(out)
+
+	return nil
+}
+
+func (b *IstioProxyBuilder) Release(ctx context.Context) error {
+	istioProxyRef, _, err := b.info(ctx)
+	if err != nil {
+		return err
 	}
 
-	prefix := path.Join("work", "proxy-"+istioProxyRef, "out")
-
-	// TODO(dio): Synchronize this with the make targets.
+	var (
+		tag   string
+		title string
+	)
 	switch b.output.Target {
 	case "istio-proxy":
-		fmt.Printf("%s/istio-proxy-%s-%s-%s-%s%s.tar.gz", prefix, b.Version[0:7], istioProxyRef[0:7], b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
-	case "envoy":
-		fmt.Printf("%s/envoy-%s-%s-%s%s.tar.gz", prefix, envoyVersion, b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
+		tag = path.Join("istio", b.Version[0:7], "proxy", istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
+		title = "istio-proxy@" + istioProxyRef[0:7]
 	case "envoy-contrib":
-		fmt.Printf("%s/envoy-contrib-%s-%s-%s%s.tar.gz", prefix, envoyVersion, b.Envoy.Version()[0:7], targzSuffix, b.output.Arch)
-	default:
-		return errors.New("invalid target")
+		tag = path.Join(b.Envoy.Name(), b.Envoy.Version()[0:7])
+		title = b.Envoy.Name() + "-contrib@" + b.Envoy.Version()[0:7]
+	case "envoy":
+		tag = path.Join(b.Envoy.Name(), b.Envoy.Version()[0:7])
+		title = b.Envoy.Name() + b.Envoy.Version()[0:7]
 	}
 
+	out := path.Join("work", "proxy-"+istioProxyRef, "out", "*.tar.gz")
+	files, err := filepath.Glob(out)
+	if err != nil {
+		return err
+	}
+
+	notes := fmt.Sprintf(`
+- https://github.com/istio/istio/commits/%s
+- https://github.com/istio/proxy/commits/%s
+- https://github.com/%s/commits/%s
+`, b.Version[0:7], istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
+
+	if err := sh.RunV("gh", "release", "view", tag, "-R", b.output.Repo); err != nil {
+		if err := sh.RunV("gh", append([]string{"release", "create", tag, "-n", notes, "-t", title, "-R", b.output.Repo}, files...)...); err == nil {
+			return err
+		}
+	} else {
+		return sh.RunV("gh", append([]string{"release", "upload", tag, "--clobber", "-R", b.output.Repo}, files...)...)
+	}
 	return nil
 }
 
@@ -157,6 +186,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		EnvoyDir:     envoyDir,
 		EnvoySHA:     b.Envoy.Version(),
 		EnvoyVersion: envoyVersion,
+		EnvoyRepo:    b.Envoy.Name(),
 		IstioVersion: b.Version,
 		FIPSBuild:    b.FIPSBuild,
 		RemoteCache:  b.remoteCache,

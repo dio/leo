@@ -10,6 +10,7 @@ import (
 	"github.com/dio/leo/istioproxy"
 )
 
+// ResolveWorkspace returns istio version that can serve building an envoy version.
 func ResolveWorkspace(v arg.Version) (string, error) {
 	target, err := getVersion(v)
 	if err != nil {
@@ -22,7 +23,7 @@ func ResolveWorkspace(v arg.Version) (string, error) {
 		return "", err
 	}
 	if target == master {
-		return "master", nil
+		return github.ResolveCommitSHA("istio/istio", "master")
 	}
 
 	lastPage, err := github.GetLastReleasePageNumber("istio/istio")
@@ -42,7 +43,7 @@ func ResolveWorkspace(v arg.Version) (string, error) {
 				return "", err
 			}
 			if target == ref {
-				return release.TagName, nil
+				return github.ResolveCommitSHA("istio/istio", release.TagName)
 			}
 		}
 	}

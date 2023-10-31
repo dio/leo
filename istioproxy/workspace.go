@@ -112,11 +112,6 @@ type TargetOptions struct {
 }
 
 func PrepareBuilder(proxyDir string) error {
-	// Currently this is only required for tcp_stats, and on amd64.
-	if runtime.GOARCH != "amd64" {
-		return nil
-	}
-
 	if err := os.WriteFile(filepath.Join(proxyDir, "common", "scripts", "Dockerfile"),
 		[]byte(`# Generated.
 ARG IMG

@@ -150,10 +150,10 @@ index 46526a9a84..87a9a2ff49 100755
 +mv libcrypto.a $1
 +mv libssl.a $2
 diff --git a/bazel/repositories.bzl b/bazel/repositories.bzl
-index 044bf232ff..532d12af99 100644
+index ccc6ad1567..ea69e8e57d 100644
 --- a/bazel/repositories.bzl
 +++ b/bazel/repositories.bzl
-@@ -527,7 +527,6 @@ def _com_github_intel_ipp_crypto_crypto_mb():
+@@ -525,7 +525,6 @@ def _com_github_intel_ipp_crypto_crypto_mb():
          # anyways, so created dynamic library would not be used anyways.
          patches = [
              "@envoy//bazel/foreign_cc:ipp-crypto-skip-dynamic-lib.patch",

@@ -173,7 +173,12 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		Suffix: suffix,
 	}, b.Patch, envoyDir)
 
-	if err != nil && len(suffix) == 0 {
+	if err == nil {
+		return nil
+	}
+
+	// When we have no suffix, no fallback.
+	if len(suffix) == 0 {
 		return err
 	}
 

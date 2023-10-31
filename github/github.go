@@ -107,6 +107,29 @@ type RefObject struct {
 	SHA string `json:"sha"`
 }
 
+type Runs struct {
+	Count int `json:"total_count"`
+}
+
+func WorkflowRuns(repo, status string) (int, error) {
+	args := []string{
+		"-fsSL",
+		"-H", "Accept: application/vnd.github.v3.json",
+		fmt.Sprintf("https://api.github.com/repos/%s/actions/runs?status=%s", repo, status),
+	}
+	args = append(args, token()...)
+
+	out, err := sh.Output("curl", args...)
+	if err != nil {
+		return 0, err
+	}
+	var r Runs
+	if err := json.Unmarshal([]byte(out), &r); err != nil {
+		return 0, err
+	}
+	return r.Count, nil
+}
+
 func ResolveCommitSHA(repo, ref string) (string, error) {
 	// Check if the given ref is from commits
 	sha, err := getCommit(repo, ref)

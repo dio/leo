@@ -173,27 +173,24 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		Suffix: suffix,
 	}, b.Patch, envoyDir)
 
-	if err == nil {
-		return nil
-	}
-
-	// When we have no suffix, no fallback.
-	if len(suffix) == 0 {
-		return err
-	}
-
-	_ = os.RemoveAll(envoyDir)
-	envoyDir, err = utils.GetTarballAndExtract(b.Envoy.Name(), b.Envoy.Version(), istioProxyDir)
 	if err != nil {
-		return err
-	}
-	if err = patch.Apply(patch.Info{
-		Name: "envoy",
-		// Always trim -dev. But this probably misleading since the patch will be valid for envoyVersion.patch+1.
-		// For example: A patch that valid 1.24.10-dev, probably invalid for 1.24.10.
-		Ref: strings.TrimSuffix(envoyVersion, "-dev"),
-	}, b.Patch, envoyDir); err != nil {
-		return err
+		// When we have no suffix, no fallback.
+		if len(suffix) == 0 {
+			return err
+		}
+		_ = os.RemoveAll(envoyDir)
+		envoyDir, err = utils.GetTarballAndExtract(b.Envoy.Name(), b.Envoy.Version(), istioProxyDir)
+		if err != nil {
+			return err
+		}
+		if err = patch.Apply(patch.Info{
+			Name: "envoy",
+			// Always trim -dev. But this probably misleading since the patch will be valid for envoyVersion.patch+1.
+			// For example: A patch that valid 1.24.10-dev, probably invalid for 1.24.10.
+			Ref: strings.TrimSuffix(envoyVersion, "-dev"),
+		}, b.Patch, envoyDir); err != nil {
+			return err
+		}
 	}
 
 	if err := istioproxy.WriteWorkspaceStatus(istioProxyDir, b.Envoy.Name(), b.Envoy.Version()); err != nil {

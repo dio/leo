@@ -108,8 +108,14 @@ type RefObject struct {
 }
 
 func ResolveCommitSHA(repo, ref string) (string, error) {
+	// Check if the given ref is from commits
+	sha, err := getCommit(repo, ref)
+	if err == nil {
+		return sha, nil
+	}
+
 	// Check if the given ref is a "head" (i.e. branch).
-	sha, err := getRefSHA(repo, ref, "heads")
+	sha, err = getRefSHA(repo, ref, "heads")
 	if err == nil {
 		return sha, nil
 	}
@@ -122,6 +128,25 @@ func ResolveCommitSHA(repo, ref string) (string, error) {
 
 	// Since this is a valid semver, we check it as a tag.
 	return getRefSHA(repo, ref, "tags")
+}
+
+func getCommit(repo, ref string) (string, error) {
+	args := []string{
+		"-fsSL",
+		"-H", "Accept: application/vnd.github.v3.json",
+		fmt.Sprintf("https://api.github.com/repos/%s/commits/%s", repo, ref),
+	}
+	args = append(args, token()...)
+
+	out, err := sh.Output("curl", args...)
+	if err != nil {
+		return "", err
+	}
+	var r RefObject
+	if err := json.Unmarshal([]byte(out), &r); err != nil {
+		return "", err
+	}
+	return r.SHA, nil
 }
 
 func getRefSHA(repo, ref, refType string) (string, error) {

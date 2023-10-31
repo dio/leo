@@ -165,14 +165,29 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		suffix = "-fips"
 	}
 	// Patch envoy
-	if err := patch.Apply(patch.Info{
+	err = patch.Apply(patch.Info{
 		Name: "envoy",
 		// Always trim -dev. But this probably misleading since the patch will be valid for envoyVersion.patch+1.
 		// For example: A patch that valid 1.24.10-dev, probably invalid for 1.24.10.
 		Ref:    strings.TrimSuffix(envoyVersion, "-dev"),
 		Suffix: suffix,
-	},
-		b.Patch, envoyDir); err != nil {
+	}, b.Patch, envoyDir)
+
+	if err != nil && len(suffix) == 0 {
+		return err
+	}
+
+	_ = os.RemoveAll(envoyDir)
+	envoyDir, err = utils.GetTarballAndExtract(b.Envoy.Name(), b.Envoy.Version(), istioProxyDir)
+	if err != nil {
+		return err
+	}
+	if err = patch.Apply(patch.Info{
+		Name: "envoy",
+		// Always trim -dev. But this probably misleading since the patch will be valid for envoyVersion.patch+1.
+		// For example: A patch that valid 1.24.10-dev, probably invalid for 1.24.10.
+		Ref: strings.TrimSuffix(envoyVersion, "-dev"),
+	}, b.Patch, envoyDir); err != nil {
 		return err
 	}
 

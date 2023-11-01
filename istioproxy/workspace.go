@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -84,7 +85,11 @@ echo "BUILD_CONFIG Release"
 }
 
 func WriteWorkspaceStatus(proxyDir, envoyName, envoySHA string) error {
-	if err := writeNamedWorkspaceStatus("istio-proxy", strings.TrimPrefix(filepath.Base(proxyDir), "proxy-"), "istio/proxy", proxyDir); err != nil {
+	status := "istio/proxy"
+	if envoyName != "envoyproxy/envoy" {
+		status = path.Join(status, envoyName, envoySHA[0:7])
+	}
+	if err := writeNamedWorkspaceStatus("istio-proxy", strings.TrimPrefix(filepath.Base(proxyDir), "proxy-"), status, proxyDir); err != nil {
 		return err
 	}
 

@@ -100,19 +100,28 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 	}
 
 	var (
-		tag   string
-		title string
+		tag            string
+		title          string
+		remoteProxyDir string
+		remoteProxyRef string
 	)
 	switch b.output.Target {
 	case "istio-proxy":
 		tag = path.Join("istio", b.Version[0:7], "proxy", istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
 		title = "istio-proxy@" + istioProxyRef[0:7]
+		remoteProxyDir = "proxy"
+		remoteProxyRef = "alpha-" + istioProxyRef
+
 	case "envoy-contrib":
 		tag = path.Join(b.Envoy.Name(), b.Envoy.Version()[0:7])
 		title = b.Envoy.Name() + "-contrib@" + b.Envoy.Version()[0:7]
+		remoteProxyDir = "envoy-contrib"
+		remoteProxyRef = b.Envoy.Version()
 	case "envoy":
 		tag = path.Join(b.Envoy.Name(), b.Envoy.Version()[0:7])
 		title = b.Envoy.Name() + "@" + b.Envoy.Version()[0:7]
+		remoteProxyDir = "envoy"
+		remoteProxyRef = b.Envoy.Version()
 	}
 
 	out := path.Join(b.output.Dir, "*.tar.gz")
@@ -135,7 +144,6 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		return sh.RunV("gh", append([]string{"release", "upload", tag, "--clobber", "-R", b.output.Repo}, files...)...)
 	}
 
-	remoteProxyDir := "proxy"
 	if b.FIPSBuild {
 		remoteProxyDir += "-fips"
 	}
@@ -152,7 +160,7 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 			continue
 		}
 		// Upload to GCS.
-		return sh.RunV("gsutil", "cp", file, "gs://"+path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-alpha-"+istioProxyRef+suffix))
+		return sh.RunV("gsutil", "cp", file, "gs://"+path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix))
 	}
 	return nil
 }

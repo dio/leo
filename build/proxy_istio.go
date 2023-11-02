@@ -130,20 +130,6 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		return err
 	}
 
-	notes := fmt.Sprintf(`
-- https://github.com/istio/istio/commits/%s
-- https://github.com/istio/proxy/commits/%s
-- https://github.com/%s/commits/%s
-`, b.Version[0:7], istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
-
-	if err := sh.RunV("gh", "release", "view", tag, "-R", b.output.Repo); err != nil {
-		if err := sh.RunV("gh", append([]string{"release", "create", tag, "-n", notes, "-t", title, "-R", b.output.Repo}, files...)...); err == nil {
-			return err
-		}
-	} else {
-		return sh.RunV("gh", append([]string{"release", "upload", tag, "--clobber", "-R", b.output.Repo}, files...)...)
-	}
-
 	if b.FIPSBuild {
 		remoteProxyDir += "-fips"
 	}
@@ -155,10 +141,30 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		suffix = "-" + b.output.Arch + ".tar.gz"
 	}
 
-	// Upload to GCS.
-	remoteFile := path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
-	fmt.Println("upload to", remoteFile)
-	return sh.RunV("gsutil", "cp", files[0], "gs://"+remoteFile)
+	for _, file := range files {
+		if !strings.HasSuffix(file, ".tar.gz") {
+			continue
+		}
+		// Upload to GCS.
+		remoteFile := path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
+		fmt.Println("upload to", remoteFile)
+		if err := sh.RunV("gsutil", "cp", file, "gs://"+remoteFile); err != nil {
+			return err
+		}
+	}
+
+	notes := fmt.Sprintf(`
+- https://github.com/istio/istio/commits/%s
+- https://github.com/istio/proxy/commits/%s
+- https://github.com/%s/commits/%s
+`, b.Version[0:7], istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
+
+	if err := sh.RunV("gh", "release", "view", tag, "-R", b.output.Repo); err != nil {
+		if err := sh.RunV("gh", append([]string{"release", "create", tag, "-n", notes, "-t", title, "-R", b.output.Repo}, files...)...); err == nil {
+			return err
+		}
+	}
+	return sh.RunV("gh", append([]string{"release", "upload", tag, "--clobber", "-R", b.output.Repo}, files...)...)
 }
 
 func (b *IstioProxyBuilder) Build(ctx context.Context) error {

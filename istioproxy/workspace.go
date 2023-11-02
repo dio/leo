@@ -242,9 +242,9 @@ istio-proxy-status:
 
 istio-proxy: istio-proxy-status
 	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
-	mkdir -p /work/out
-	cp -f %s %s/envoy
-	tar -czf /work/out/%s -C %s envoy
+	mkdir -p /work/out/usr/local/bin
+	cp -f %s /work/out/usr/local/bin/envoy
+	tar -czf /work/out/%s -C /work/out usr
 `
 	return fmt.Sprintf(content,
 		buildConfig,
@@ -253,13 +253,8 @@ istio-proxy: istio-proxy-status
 		target+".stripped",
 		remoteCache,
 		ldLibraryPath,
-
-		// Rename binary.
 		binaryPath+".stripped",
-		filepath.Dir(binaryPath),
-
-		targz,
-		filepath.Dir(binaryPath)), nil
+		targz), nil
 }
 
 func EnvoyTarget(opts TargetOptions) (string, error) {

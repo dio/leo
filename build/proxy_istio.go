@@ -134,6 +134,26 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 	} else {
 		return sh.RunV("gh", append([]string{"release", "upload", tag, "--clobber", "-R", b.output.Repo}, files...)...)
 	}
+
+	remoteProxyDir := "proxy"
+	if b.FIPSBuild {
+		remoteProxyDir += "-fips"
+	}
+	if b.Envoy.Name() != "envoyproxy/envoy" {
+		remoteProxyDir += "-" + arg.Repo(b.Envoy.Name()).Owner()
+	}
+	suffix := ".tar.gz"
+	if b.output.Arch != "amd64" {
+		suffix = "-" + b.output.Arch + ".tar.gz"
+	}
+
+	for _, file := range files {
+		if !strings.HasSuffix(file, ".tar.gz") {
+			continue
+		}
+		// Upload to GCS.
+		return sh.RunV("gsutil", "cp", file, "gs://"+path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-alpha-"+istioProxyRef+suffix))
+	}
 	return nil
 }
 

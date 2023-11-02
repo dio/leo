@@ -155,16 +155,10 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		suffix = "-" + b.output.Arch + ".tar.gz"
 	}
 
-	for _, file := range files {
-		if !strings.HasSuffix(file, ".tar.gz") {
-			continue
-		}
-		// Upload to GCS.
-		remoteFile := path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
-		fmt.Println("upload to", remoteFile)
-		return sh.RunV("gsutil", "cp", file, "gs://"+remoteFile)
-	}
-	return nil
+	// Upload to GCS.
+	remoteFile := path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
+	fmt.Println("upload to", remoteFile)
+	return sh.RunV("gsutil", "cp", files[0], "gs://"+remoteFile)
 }
 
 func (b *IstioProxyBuilder) Build(ctx context.Context) error {

@@ -309,6 +309,7 @@ func init() {
 	proxyReleaseCmd.Flags().StringVar(&target, "target", "istio-proxy", "Build target, i.e. envoy, istio-proxy")
 	proxyReleaseCmd.Flags().StringVar(&repo, "repo", "tetrateio/proxy-archives", "Archives repo")
 	proxyReleaseCmd.Flags().StringVar(&dir, "dir", "./out", "Assets directory")
+	proxyReleaseCmd.Flags().StringVar(&arch, "arch", runtime.GOARCH, "Builder architecture")
 
 	proxyCmd.AddCommand(proxyInfoCmd)
 	proxyCmd.AddCommand(proxyOutputCmd)

@@ -160,7 +160,9 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 			continue
 		}
 		// Upload to GCS.
-		return sh.RunV("gsutil", "cp", file, "gs://"+path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix))
+		remoteFile := path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
+		fmt.Println("upload to", remoteFile)
+		return sh.RunV("gsutil", "cp", file, "gs://"+remoteFile)
 	}
 	return nil
 }

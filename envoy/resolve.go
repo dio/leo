@@ -64,7 +64,7 @@ func getVersion(v arg.Version) (string, error) {
 }
 
 func getReferencedVersion(istioRef string) (string, error) {
-	deps, err := istio.GetDeps(istioRef)
+	deps, err := istio.GetDeps("istio/istio", istioRef)
 	if err != nil {
 		return "", err
 	}

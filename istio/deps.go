@@ -27,8 +27,8 @@ type Dep struct {
 }
 
 // GetDeps gets deps of a specific istio revision.
-func GetDeps(ref string) (Deps, error) {
-	data, err := github.GetRaw("istio/istio", "istio.deps", ref)
+func GetDeps(repo, ref string) (Deps, error) {
+	data, err := github.GetRaw(repo, "istio.deps", ref)
 	if err != nil {
 		return Deps{}, fmt.Errorf("failed to get istio.deps: %w", err)
 	}

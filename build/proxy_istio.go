@@ -34,7 +34,7 @@ func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
 	}
 	b.Version = istioRef
 
-	deps, err := istio.GetDeps(b.Version)
+	deps, err := istio.GetDeps("istio/istio", b.Version)
 	if err != nil {
 		return "", "", err
 	}

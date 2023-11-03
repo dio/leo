@@ -4,9 +4,11 @@ go 1.21.3
 
 require (
 	cloud.google.com/go/compute v1.23.2
+	cloud.google.com/go/pubsub v1.33.0
 	github.com/Masterminds/semver v1.5.0
 	github.com/bazelbuild/buildtools v0.0.0-20231017121127-23aa65d4e117
 	github.com/cenkalti/backoff/v4 v4.2.1
+	github.com/dio/sh v0.0.0-20231103061956-bba8896f8c6a
 	github.com/jdxcode/netrc v1.0.0
 	github.com/magefile/mage v1.15.0
 	github.com/mitchellh/go-homedir v1.1.0
@@ -17,7 +19,6 @@ require (
 	cloud.google.com/go v0.110.7 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.1 // indirect
-	cloud.google.com/go/pubsub v1.33.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect

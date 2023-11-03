@@ -179,12 +179,12 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
   fips: %v
 `, istioProxyRef, b.Envoy, envoyVersion, b.FIPSBuild)
 
-	istioProxyDir, err := utils.GetTarballAndExtract("istio/proxy", istioProxyRef, "work")
+	istioProxyDir, err := utils.GetTarballAndExtract(ctx, "istio/proxy", istioProxyRef, "work")
 	if err != nil {
 		return err
 	}
 
-	envoyDir, err := utils.GetTarballAndExtract(b.Envoy.Name(), b.Envoy.Version(), istioProxyDir)
+	envoyDir, err := utils.GetTarballAndExtract(ctx, b.Envoy.Name(), b.Envoy.Version(), istioProxyDir)
 	if err != nil {
 		return err
 	}
@@ -208,7 +208,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 			return err
 		}
 		_ = os.RemoveAll(envoyDir)
-		envoyDir, err = utils.GetTarballAndExtract(b.Envoy.Name(), b.Envoy.Version(), istioProxyDir)
+		envoyDir, err = utils.GetTarballAndExtract(ctx, b.Envoy.Name(), b.Envoy.Version(), istioProxyDir)
 		if err != nil {
 			return err
 		}

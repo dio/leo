@@ -37,5 +37,5 @@ func GitCloneAndCheckout(ctx context.Context, repo, ref, dir string) (string, er
 		return "", err
 	}
 
-	return dst, sh.Run(ctx, "git", "-C", dst, ref)
+	return dst, sh.Run(ctx, "git", "-C", dst, "checkout", ref)
 }

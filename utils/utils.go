@@ -32,6 +32,7 @@ func GetTarballAndExtract(ctx context.Context, repo, ref, dir string) (string, e
 
 func GitCloneAndCheckout(ctx context.Context, repo, ref, dir string) (string, error) {
 	dst := filepath.Join(dir, ref)
+	_ = os.RemoveAll(dst)
 	_ = os.MkdirAll(dst, os.ModePerm)
 	if err := sh.Run(ctx, "git", "clone", "https://github.com/"+repo+".git", dst); err != nil {
 		return "", err

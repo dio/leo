@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path"
@@ -39,4 +40,14 @@ func GitCloneAndCheckout(ctx context.Context, repo, ref, dir string) (string, er
 	}
 
 	return dst, sh.Run(ctx, "git", "-C", dst, "checkout", ref)
+}
+
+func ReplaceContent(name, s, r string) error {
+	data, err := os.ReadFile(name)
+	if err != nil {
+		return err
+	}
+
+	out := bytes.Replace(data, []byte(s), []byte(r), 1)
+	return os.WriteFile(path.Join(name), out, os.ModePerm)
 }

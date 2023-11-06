@@ -4,17 +4,119 @@ import (
 	"context"
 	"errors"
 	"net"
+	"strings"
 	"time"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	backoff "github.com/cenkalti/backoff/v4"
+	"google.golang.org/protobuf/proto"
 )
 
 type Instance struct {
 	ProjectID string
 	Zone      string
 	Name      string
+}
+
+func (i *Instance) Region() string {
+	return i.Zone[0:strings.LastIndex(i.Zone, "-")]
+}
+
+func (i *Instance) Delete(ctx context.Context) error {
+	instance, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		return err
+	}
+	defer instance.Close()
+
+	req := &computepb.DeleteInstanceRequest{
+		Project:  i.ProjectID,
+		Zone:     i.Zone,
+		Instance: i.Name,
+	}
+
+	op, err := instance.Delete(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	if err := op.Wait(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i *Instance) Create(ctx context.Context, machineType, machineImage string) error {
+	instance, err := compute.NewInstancesRESTClient(ctx)
+	if err != nil {
+		return err
+	}
+	defer instance.Close()
+
+	req := &computepb.InsertInstanceRequest{
+		Project: i.ProjectID,
+		Zone:    i.Zone,
+		InstanceResource: &computepb.Instance{
+			Zone: proto.String("projects/" + i.ProjectID + "/zones/" + i.Zone),
+			Name: proto.String(i.Name),
+			Disks: []*computepb.AttachedDisk{
+				{
+					InitializeParams: &computepb.AttachedDiskInitializeParams{
+						DiskSizeGb: proto.Int64(80),
+						DiskType:   proto.String("projects/" + i.ProjectID + "/zones/" + i.Zone + "/diskTypes/pd-balanced"),
+					},
+					AutoDelete: proto.Bool(true),
+					Boot:       proto.Bool(true),
+					Type:       proto.String(computepb.AttachedDisk_PERSISTENT.String()),
+					Mode:       proto.String(computepb.AttachedDisk_READ_WRITE.String()),
+				},
+			},
+			NetworkInterfaces: []*computepb.NetworkInterface{
+				{
+					AccessConfigs: []*computepb.AccessConfig{
+						{
+							Name:        proto.String("External NAT"),
+							NetworkTier: proto.String("PREMIUM"),
+						},
+					},
+					StackType:  proto.String("IPV4_ONLY"),
+					Subnetwork: proto.String("projects/" + i.ProjectID + "/regions/" + i.Region() + "/subnetworks/default"),
+				},
+			},
+			// For example: n2-standard-8.
+			MachineType: proto.String("projects/" + i.ProjectID + "/zones/" + i.Zone + "/machineTypes/" + machineType),
+			ServiceAccounts: []*computepb.ServiceAccount{
+				{
+					Email: proto.String("tetrateio@" + i.ProjectID + ".iam.gserviceaccount.com"),
+					Scopes: []string{
+						"https://www.googleapis.com/auth/cloud-platform",
+					},
+				},
+			},
+			MinCpuPlatform:     proto.String("Automatic"),
+			SourceMachineImage: proto.String("projects/" + i.ProjectID + "/global/machineImages/" + machineImage),
+			Scheduling: &computepb.Scheduling{
+				ProvisioningModel:         proto.String("SPOT"),
+				OnHostMaintenance:         proto.String("TERMINATE"),
+				InstanceTerminationAction: proto.String("DELETE"),
+				Preemptible:               proto.Bool(true),
+				AutomaticRestart:          proto.Bool(false),
+			},
+		},
+	}
+
+	op, err := instance.Insert(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	if err := op.Wait(ctx); err != nil {
+		return err
+	}
+
+	return i.check(ctx, instance)
 }
 
 func (i *Instance) Start(ctx context.Context) error {

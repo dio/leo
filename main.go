@@ -23,6 +23,8 @@ var (
 
 	zone         string
 	instanceName string
+	machineType  string
+	machineImage string
 
 	computeCmd = &cobra.Command{
 		Use:   "compute <command> [flags]",
@@ -43,6 +45,48 @@ var (
 		},
 	}
 
+	computeCreateCmd = &cobra.Command{
+		Use:   "create [flags]",
+		Short: "Create a compute",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			i := &compute.Instance{
+				ProjectID: os.Getenv("GCLOUD_PROJECT"),
+				Zone:      zone,
+				Name:      instanceName,
+			}
+			return i.Create(cmd.Context(), machineType, machineImage)
+		},
+	}
+
+	computeDeleteCmd = &cobra.Command{
+		Use:   "delete [flags]",
+		Short: "Delete a compute",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			i := &compute.Instance{
+				ProjectID: os.Getenv("GCLOUD_PROJECT"),
+				Zone:      zone,
+				Name:      instanceName,
+			}
+			return i.Delete(cmd.Context())
+		},
+	}
+
+	computeStopCmd = &cobra.Command{
+		Use:   "stop [flags]",
+		Short: "Stop a compute",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			i := &compute.Instance{
+				ProjectID: os.Getenv("GCLOUD_PROJECT"),
+				Zone:      zone,
+				Name:      instanceName,
+			}
+			return i.Stop(cmd.Context())
+		},
+	}
+
 	resolveCmd = &cobra.Command{
 		Use:   "resolve [flags]",
 		Short: "Resolve workspace from a reference",
@@ -59,20 +103,6 @@ var (
 				fmt.Print(target)
 			}
 			return nil
-		},
-	}
-
-	computeStopCmd = &cobra.Command{
-		Use:   "stop [flags]",
-		Short: "Stop a compute",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			i := &compute.Instance{
-				ProjectID: os.Getenv("GCLOUD_PROJECT"),
-				Zone:      zone,
-				Name:      instanceName,
-			}
-			return i.Stop(cmd.Context())
 		},
 	}
 
@@ -175,8 +205,12 @@ func main() {
 func init() {
 	computeCmd.PersistentFlags().StringVar(&zone, "zone", "", "Zone")
 	computeCmd.PersistentFlags().StringVar(&instanceName, "instance", "", "Instance name")
+	computeCmd.PersistentFlags().StringVar(&machineType, "machine-type", "n2-standard-8", "Machine type")
+	computeCmd.PersistentFlags().StringVar(&machineImage, "machine-image", "builder-amd64", "Machine image")
 	computeCmd.AddCommand(computeStartCmd)
 	computeCmd.AddCommand(computeStopCmd)
+	computeCmd.AddCommand(computeCreateCmd)
+	computeCmd.AddCommand(computeDeleteCmd)
 
 	proxyCmd.PersistentFlags().StringVar(&overrideEnvoy, "override-envoy", "", "Override Envoy repository. For example: tetratelabs/envoy@88a80e6bbbee56de8c3899c75eaf36c46fad1aa7")
 	proxyCmd.PersistentFlags().StringVar(&patchSource, "patch-source", "github://dio/leo", "Patch source. For example: file://patches")

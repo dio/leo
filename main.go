@@ -13,8 +13,8 @@ import (
 	"github.com/dio/leo/compute"
 	"github.com/dio/leo/envoy"
 
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
-	"github.com/teris-io/shortid"
 )
 
 var (
@@ -38,15 +38,7 @@ var (
 		Short: "Name a compute",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			sid, err := shortid.New(1, shortid.DefaultABC, 2342)
-			if err != nil {
-				return err
-			}
-			id, err := sid.Generate()
-			if err != nil {
-				return err
-			}
-			fmt.Print(id)
+			fmt.Print(uuid.NewString())
 			return nil
 		},
 	}

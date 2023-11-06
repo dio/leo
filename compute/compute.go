@@ -144,6 +144,14 @@ func (i *Instance) Start(ctx context.Context) error {
 		return err
 	}
 
+	// Sleep for 10 secs.
+	time.Sleep(10 * time.Second)
+
+	if err := i.check(ctx, instance); err != nil {
+		return err
+	}
+
+	// Check twice.
 	return i.check(ctx, instance)
 }
 

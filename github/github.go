@@ -2,6 +2,7 @@ package github
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -12,14 +13,14 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/dio/leo/env"
-	"github.com/magefile/mage/sh"
+	"github.com/dio/sh"
 )
 
 type Release struct {
 	TagName string `json:"tag_name"`
 }
 
-func GetReleases(repo string, page int) ([]Release, error) {
+func GetReleases(ctx context.Context, repo string, page int) ([]Release, error) {
 	// https://api.github.com/repos/istio/istio/releases?page=1
 	args := []string{
 		"-fsSL",
@@ -28,7 +29,7 @@ func GetReleases(repo string, page int) ([]Release, error) {
 	}
 	args = append(args, token()...)
 
-	out, err := sh.Output("curl", args...)
+	out, err := sh.Output(ctx, "curl", args...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +46,7 @@ var (
 	pageRe      = regexp.MustCompile(pagePattern)
 )
 
-func GetLastReleasePageNumber(repo string) (int, error) {
+func GetLastReleasePageNumber(ctx context.Context, repo string) (int, error) {
 	args := []string{
 		"-fsSLI",
 		"-H", "Accept: application/vnd.github.v3.json",
@@ -53,7 +54,7 @@ func GetLastReleasePageNumber(repo string) (int, error) {
 	}
 	args = append(args, token()...)
 
-	out, err := sh.Output("curl", args...)
+	out, err := sh.Output(ctx, "curl", args...)
 	if err != nil {
 		return 0, err
 	}
@@ -71,7 +72,7 @@ func GetLastReleasePageNumber(repo string) (int, error) {
 	return 0, nil
 }
 
-func GetRaw(repo, file, ref string) (string, error) {
+func GetRaw(ctx context.Context, repo, file, ref string) (string, error) {
 	args := []string{
 		"-fsSL",
 		"-H", "Accept: application/vnd.github.v3.raw",
@@ -79,10 +80,10 @@ func GetRaw(repo, file, ref string) (string, error) {
 	}
 	args = append(args, token()...)
 
-	return sh.Output("curl", args...)
+	return sh.Output(ctx, "curl", args...)
 }
 
-func GetTarball(repo, ref, dir string) (string, error) {
+func GetTarball(ctx context.Context, repo, ref, dir string) (string, error) {
 	_ = os.MkdirAll(dir, os.ModePerm)
 	targz := filepath.Join(dir, ref+".tar.gz")
 	args := []string{
@@ -93,7 +94,7 @@ func GetTarball(repo, ref, dir string) (string, error) {
 	}
 	args = append(args, user()...)
 
-	if err := sh.Run("curl", args...); err != nil {
+	if err := sh.Run(ctx, "curl", args...); err != nil {
 		return "", err
 	}
 	return targz, nil
@@ -111,7 +112,7 @@ type Runs struct {
 	Count int `json:"total_count"`
 }
 
-func WorkflowRuns(repo, status string) (int, error) {
+func WorkflowRuns(ctx context.Context, repo, status string) (int, error) {
 	args := []string{
 		"-fsSL",
 		"-H", "Accept: application/vnd.github.v3.json",
@@ -119,7 +120,7 @@ func WorkflowRuns(repo, status string) (int, error) {
 	}
 	args = append(args, token()...)
 
-	out, err := sh.Output("curl", args...)
+	out, err := sh.Output(ctx, "curl", args...)
 	if err != nil {
 		return 0, err
 	}
@@ -130,15 +131,15 @@ func WorkflowRuns(repo, status string) (int, error) {
 	return r.Count, nil
 }
 
-func ResolveCommitSHA(repo, ref string) (string, error) {
+func ResolveCommitSHA(ctx context.Context, repo, ref string) (string, error) {
 	// Check if the given ref is from commits
-	sha, err := getCommit(repo, ref)
+	sha, err := getCommit(ctx, repo, ref)
 	if err == nil {
 		return sha, nil
 	}
 
 	// Check if the given ref is a "head" (i.e. branch).
-	sha, err = getRefSHA(repo, ref, "heads")
+	sha, err = getRefSHA(ctx, repo, ref, "heads")
 	if err == nil {
 		return sha, nil
 	}
@@ -150,10 +151,10 @@ func ResolveCommitSHA(repo, ref string) (string, error) {
 	}
 
 	// Since this is a valid semver, we check it as a tag.
-	return getRefSHA(repo, ref, "tags")
+	return getRefSHA(ctx, repo, ref, "tags")
 }
 
-func getCommit(repo, ref string) (string, error) {
+func getCommit(ctx context.Context, repo, ref string) (string, error) {
 	args := []string{
 		"-fsSL",
 		"-H", "Accept: application/vnd.github.v3.json",
@@ -161,7 +162,7 @@ func getCommit(repo, ref string) (string, error) {
 	}
 	args = append(args, token()...)
 
-	out, err := sh.Output("curl", args...)
+	out, err := sh.Output(ctx, "curl", args...)
 	if err != nil {
 		return "", err
 	}
@@ -172,7 +173,7 @@ func getCommit(repo, ref string) (string, error) {
 	return r.SHA, nil
 }
 
-func getRefSHA(repo, ref, refType string) (string, error) {
+func getRefSHA(ctx context.Context, repo, ref, refType string) (string, error) {
 	args := []string{
 		"-fsSL",
 		"-H", "Accept: application/vnd.github.v3.json",
@@ -180,7 +181,7 @@ func getRefSHA(repo, ref, refType string) (string, error) {
 	}
 	args = append(args, token()...)
 
-	out, err := sh.Output("curl", args...)
+	out, err := sh.Output(ctx, "curl", args...)
 	if err != nil {
 		return "", err
 	}
@@ -201,7 +202,7 @@ func getRefSHA(repo, ref, refType string) (string, error) {
 	}
 	args = append(args, token()...)
 
-	out, err = sh.Output("curl", args...)
+	out, err = sh.Output(ctx, "curl", args...)
 	if err != nil {
 		return "", err
 	}

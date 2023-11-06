@@ -18,7 +18,7 @@ func GetTarballAndExtract(ctx context.Context, repo, ref, dir string) (string, e
 		return "", err
 	}
 
-	targz, err := github.GetTarball(repo, ref, tmp)
+	targz, err := github.GetTarball(ctx, repo, ref, tmp)
 	if err != nil {
 		return "", err
 	}

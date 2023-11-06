@@ -10,7 +10,6 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/dio/sh v0.0.0-20231103061956-bba8896f8c6a
 	github.com/jdxcode/netrc v1.0.0
-	github.com/magefile/mage v1.15.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/spf13/cobra v1.7.0
 )

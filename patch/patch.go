@@ -1,6 +1,7 @@
 package patch
 
 import (
+	"context"
 	"net/url"
 	"os"
 	"path"
@@ -8,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/dio/leo/github"
-	"github.com/magefile/mage/sh"
+	"github.com/dio/sh"
 )
 
 type Info struct {
@@ -18,45 +19,45 @@ type Info struct {
 }
 
 type Getter interface {
-	Get(Info) ([]byte, error)
+	Get(context.Context, Info) ([]byte, error)
 }
 
-func Get(info Info, getter Getter) ([]byte, error) {
-	return getter.Get(info)
+func Get(ctx context.Context, info Info, getter Getter) ([]byte, error) {
+	return getter.Get(ctx, info)
 }
 
 type GitHubGetter struct {
 	Repo string
 }
 
-func (g GitHubGetter) Get(info Info) ([]byte, error) {
+func (g GitHubGetter) Get(ctx context.Context, info Info) ([]byte, error) {
 	idx := strings.LastIndex(info.Ref, ".")
 	minorName := info.Ref[0:idx]
 
 	// E.g. 1.29.0-fips.patch.
 	patchFile := info.Ref + info.Suffix + ".patch"
-	content, err := github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
+	content, err := github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
 
 	// We search for minor with suffix. E.g. 1.29-fips.patch.
 	patchFile = minorName + info.Suffix + ".patch"
-	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
+	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
 
 	// E.g. 1.29.0.patch.
 	patchFile = info.Ref + ".patch"
-	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
+	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
 
 	// We search for minor. E.g. 1.29.patch.
 	patchFile = minorName + ".patch"
-	content, err = github.GetRaw(g.Repo, path.Join("patches", info.Name, patchFile), "main")
+	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
@@ -68,7 +69,7 @@ type FSGetter struct {
 	Dir string
 }
 
-func (g FSGetter) Get(info Info) ([]byte, error) {
+func (g FSGetter) Get(_ context.Context, info Info) ([]byte, error) {
 	baseDir := filepath.Join(g.Dir, info.Name)
 	entries, err := os.ReadDir(baseDir)
 	if err != nil {
@@ -120,8 +121,8 @@ func (g FSGetter) Get(info Info) ([]byte, error) {
 	return []byte{}, nil
 }
 
-func Apply(info Info, patchGetter Getter, dst string) error {
-	patchData, err := patchGetter.Get(info)
+func Apply(ctx context.Context, info Info, patchGetter Getter, dst string) error {
+	patchData, err := patchGetter.Get(ctx, info)
 	if err != nil {
 		return err
 	}
@@ -139,7 +140,7 @@ func Apply(info Info, patchGetter Getter, dst string) error {
 	if err != nil {
 		return err
 	}
-	return sh.Run("patch", "-p1", "-i", patchFile.Name(), "-d", dst)
+	return sh.Run(ctx, "patch", "-p1", "-i", patchFile.Name(), "-d", dst)
 }
 
 type Source string

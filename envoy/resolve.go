@@ -1,6 +1,7 @@
 package envoy
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -11,39 +12,39 @@ import (
 )
 
 // ResolveWorkspace returns istio version that can serve building an envoy version.
-func ResolveWorkspace(v arg.Version) (string, error) {
-	target, err := getVersion(v)
+func ResolveWorkspace(ctx context.Context, v arg.Version) (string, error) {
+	target, err := getVersion(ctx, v)
 	if err != nil {
 		return "", err
 	}
 
 	// Firstly, check if master can serve us.
-	master, err := getReferencedVersion("master")
+	master, err := getReferencedVersion(ctx, "master")
 	if err != nil {
 		return "", err
 	}
 	if target == master {
-		return github.ResolveCommitSHA("istio/istio", "master")
+		return github.ResolveCommitSHA(ctx, "istio/istio", "master")
 	}
 
-	lastPage, err := github.GetLastReleasePageNumber("istio/istio")
+	lastPage, err := github.GetLastReleasePageNumber(ctx, "istio/istio")
 	if err != nil {
 		return "", err
 	}
 
 	// If not, we need to scan all releases.
 	for page := 1; page <= lastPage; page++ {
-		releases, err := github.GetReleases("istio/istio", page)
+		releases, err := github.GetReleases(ctx, "istio/istio", page)
 		if err != nil {
 			return "", err
 		}
 		for _, release := range releases {
-			ref, err := getReferencedVersion(release.TagName)
+			ref, err := getReferencedVersion(ctx, release.TagName)
 			if err != nil {
 				return "", err
 			}
 			if target == ref {
-				return github.ResolveCommitSHA("istio/istio", release.TagName)
+				return github.ResolveCommitSHA(ctx, "istio/istio", release.TagName)
 			}
 		}
 	}
@@ -51,8 +52,8 @@ func ResolveWorkspace(v arg.Version) (string, error) {
 	return "", errors.New("cannot resolve")
 }
 
-func getVersion(v arg.Version) (string, error) {
-	versionTxt, err := github.GetRaw(v.Name(), "VERSION.txt", v.Version())
+func getVersion(ctx context.Context, v arg.Version) (string, error) {
+	versionTxt, err := github.GetRaw(ctx, v.Name(), "VERSION.txt", v.Version())
 	if err != nil {
 		return "", err
 	}
@@ -63,13 +64,13 @@ func getVersion(v arg.Version) (string, error) {
 	return target[0:strings.LastIndex(target, ".")], nil
 }
 
-func getReferencedVersion(istioRef string) (string, error) {
-	deps, err := istio.GetDeps("istio/istio", istioRef)
+func getReferencedVersion(ctx context.Context, istioRef string) (string, error) {
+	deps, err := istio.GetDeps(ctx, "istio/istio", istioRef)
 	if err != nil {
 		return "", err
 	}
 
-	workspace, err := github.GetRaw("istio/proxy", "WORKSPACE", deps.Get("proxy").SHA)
+	workspace, err := github.GetRaw(ctx, "istio/proxy", "WORKSPACE", deps.Get("proxy").SHA)
 	if err != nil {
 		return "", err
 	}
@@ -78,5 +79,5 @@ func getReferencedVersion(istioRef string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return getVersion(arg.Version(e.Org + "/" + e.Repo + "@" + e.SHA))
+	return getVersion(ctx, arg.Version(e.Org+"/"+e.Repo+"@"+e.SHA))
 }

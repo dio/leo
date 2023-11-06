@@ -1,6 +1,7 @@
 package istio
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -27,8 +28,8 @@ type Dep struct {
 }
 
 // GetDeps gets deps of a specific istio revision.
-func GetDeps(repo, ref string) (Deps, error) {
-	data, err := github.GetRaw(repo, "istio.deps", ref)
+func GetDeps(ctx context.Context, repo, ref string) (Deps, error) {
+	data, err := github.GetRaw(ctx, repo, "istio.deps", ref)
 	if err != nil {
 		return Deps{}, fmt.Errorf("failed to get istio.deps: %w", err)
 	}

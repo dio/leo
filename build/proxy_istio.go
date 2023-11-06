@@ -14,7 +14,7 @@ import (
 	"github.com/dio/leo/istioproxy"
 	"github.com/dio/leo/patch"
 	"github.com/dio/leo/utils"
-	"github.com/magefile/mage/sh"
+	"github.com/dio/sh"
 )
 
 type IstioProxyBuilder struct {
@@ -28,13 +28,13 @@ type IstioProxyBuilder struct {
 }
 
 func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
-	istioRef, err := github.ResolveCommitSHA("istio/istio", b.Version)
+	istioRef, err := github.ResolveCommitSHA(ctx, "istio/istio", b.Version)
 	if err != nil {
 		return "", "", err
 	}
 	b.Version = istioRef
 
-	deps, err := istio.GetDeps("istio/istio", b.Version)
+	deps, err := istio.GetDeps(ctx, "istio/istio", b.Version)
 	if err != nil {
 		return "", "", err
 	}
@@ -42,7 +42,7 @@ func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
 
 	// When "envoy" is empty, we need to resolve our envoy from the istio.deps.
 	if b.Envoy.IsEmpty() {
-		istioProxyWorkspace, err := github.GetRaw("istio/proxy", "WORKSPACE", istioProxyRef)
+		istioProxyWorkspace, err := github.GetRaw(ctx, "istio/proxy", "WORKSPACE", istioProxyRef)
 		if err != nil {
 			return "", "", err
 		}
@@ -52,14 +52,14 @@ func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
 		}
 		b.Envoy = arg.Version(fmt.Sprintf("%s/%s@%s", envoyRepo.Org, envoyRepo.Repo, envoyRepo.SHA))
 	} else {
-		envoySHA, err := github.ResolveCommitSHA(b.Envoy.Name(), b.Envoy.Version())
+		envoySHA, err := github.ResolveCommitSHA(ctx, b.Envoy.Name(), b.Envoy.Version())
 		if err != nil {
 			return "", "", err
 		}
 		b.Envoy = arg.Version(b.Envoy.Name() + "@" + envoySHA)
 	}
 
-	envoyVersion, err := github.GetRaw(b.Envoy.Name(), "VERSION.txt", b.Envoy.Version())
+	envoyVersion, err := github.GetRaw(ctx, b.Envoy.Name(), "VERSION.txt", b.Envoy.Version())
 	if err != nil {
 		return "", "", err
 	}
@@ -147,7 +147,7 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		}
 		// Upload to GCS.
 		remoteFile := path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
-		if err := sh.RunV("gsutil", "cp", file, "gs://"+remoteFile); err != nil {
+		if err := sh.RunV(ctx, "gsutil", "cp", file, "gs://"+remoteFile); err != nil {
 			return err
 		}
 	}
@@ -158,12 +158,12 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 - https://github.com/%s/commits/%s
 `, b.Version[0:7], istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
 
-	if err := sh.RunV("gh", "release", "view", tag, "-R", b.output.Repo); err != nil {
-		if err := sh.RunV("gh", append([]string{"release", "create", tag, "-n", notes, "-t", title, "-R", b.output.Repo}, files...)...); err == nil {
+	if err := sh.RunV(ctx, "gh", "release", "view", tag, "-R", b.output.Repo); err != nil {
+		if err := sh.RunV(ctx, "gh", append([]string{"release", "create", tag, "-n", notes, "-t", title, "-R", b.output.Repo}, files...)...); err == nil {
 			return err
 		}
 	}
-	return sh.RunV("gh", append([]string{"release", "upload", tag, "--clobber", "-R", b.output.Repo}, files...)...)
+	return sh.RunV(ctx, "gh", append([]string{"release", "upload", tag, "--clobber", "-R", b.output.Repo}, files...)...)
 }
 
 func (b *IstioProxyBuilder) Build(ctx context.Context) error {
@@ -194,7 +194,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		suffix = "-fips"
 	}
 	// Patch envoy
-	err = patch.Apply(patch.Info{
+	err = patch.Apply(ctx, patch.Info{
 		Name: "envoy",
 		// Always trim -dev. But this probably misleading since the patch will be valid for envoyVersion.patch+1.
 		// For example: A patch that valid 1.24.10-dev, probably invalid for 1.24.10.
@@ -212,7 +212,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if err = patch.Apply(patch.Info{
+		if err = patch.Apply(ctx, patch.Info{
 			Name: "envoy",
 			// Always trim -dev. But this probably misleading since the patch will be valid for envoyVersion.patch+1.
 			// For example: A patch that valid 1.24.10-dev, probably invalid for 1.24.10.

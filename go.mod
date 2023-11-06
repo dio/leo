@@ -12,6 +12,7 @@ require (
 	github.com/jdxcode/netrc v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/spf13/cobra v1.7.0
+	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	google.golang.org/protobuf v1.31.0
 )
 

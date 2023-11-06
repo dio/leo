@@ -12,7 +12,9 @@ import (
 	"github.com/dio/leo/build"
 	"github.com/dio/leo/compute"
 	"github.com/dio/leo/envoy"
+
 	"github.com/spf13/cobra"
+	"github.com/teris-io/shortid"
 )
 
 var (
@@ -29,6 +31,24 @@ var (
 	computeCmd = &cobra.Command{
 		Use:   "compute <command> [flags]",
 		Short: "Start and stop compute",
+	}
+
+	computeNameCmd = &cobra.Command{
+		Use:   "name",
+		Short: "Name a compute",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			sid, err := shortid.New(1, shortid.DefaultABC, 2342)
+			if err != nil {
+				return err
+			}
+			id, err := sid.Generate()
+			if err != nil {
+				return err
+			}
+			fmt.Print(id)
+			return nil
+		},
 	}
 
 	computeStartCmd = &cobra.Command{
@@ -211,6 +231,7 @@ func init() {
 	computeCmd.AddCommand(computeStopCmd)
 	computeCmd.AddCommand(computeCreateCmd)
 	computeCmd.AddCommand(computeDeleteCmd)
+	computeCmd.AddCommand(computeNameCmd)
 
 	proxyCmd.PersistentFlags().StringVar(&overrideEnvoy, "override-envoy", "", "Override Envoy repository. For example: tetratelabs/envoy@88a80e6bbbee56de8c3899c75eaf36c46fad1aa7")
 	proxyCmd.PersistentFlags().StringVar(&patchSource, "patch-source", "github://dio/leo", "Patch source. For example: file://patches")

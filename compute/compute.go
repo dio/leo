@@ -61,6 +61,9 @@ func (i *Instance) Create(ctx context.Context, machineType, machineImage string)
 		InstanceResource: &computepb.Instance{
 			Zone: proto.String("projects/" + i.ProjectID + "/zones/" + i.Zone),
 			Name: proto.String(i.Name),
+			Labels: map[string]string{
+				"purpose": "builder",
+			},
 			Disks: []*computepb.AttachedDisk{
 				{
 					InitializeParams: &computepb.AttachedDiskInitializeParams{

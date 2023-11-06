@@ -38,7 +38,7 @@ var (
 		Short: "Name a compute",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Print(uuid.NewString())
+			fmt.Print("builder-" + uuid.NewString())
 			return nil
 		},
 	}

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"os"
@@ -50,4 +51,28 @@ func ReplaceContent(name, s, r string) error {
 
 	out := bytes.Replace(data, []byte(s), []byte(r), 1)
 	return os.WriteFile(path.Join(name), out, os.ModePerm)
+}
+
+func ReplaceMatchedLine(name, replaced string, replacer []func(string) string) error {
+	input, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	defer input.Close()
+
+	scanner := bufio.NewScanner(input)
+
+	var out bytes.Buffer
+	for scanner.Scan() {
+		line := scanner.Text()
+		for _, f := range replacer {
+			out.WriteString(f(line) + "\n")
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return os.WriteFile(replaced, out.Bytes(), os.ModePerm)
 }

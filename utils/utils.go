@@ -53,7 +53,7 @@ func ReplaceContent(name, s, r string) error {
 	return os.WriteFile(path.Join(name), out, os.ModePerm)
 }
 
-func ReplaceMatchedLine(name, replaced string, replacer []func(string) string) error {
+func ReplaceMatchedLine(name, replaced string, replacer func(string) string) error {
 	input, err := os.Open(name)
 	if err != nil {
 		return err
@@ -65,9 +65,7 @@ func ReplaceMatchedLine(name, replaced string, replacer []func(string) string) e
 	var out bytes.Buffer
 	for scanner.Scan() {
 		line := scanner.Text()
-		for _, f := range replacer {
-			out.WriteString(f(line) + "\n")
-		}
+		out.WriteString(replacer(line) + "\n")
 	}
 
 	if err := scanner.Err(); err != nil {

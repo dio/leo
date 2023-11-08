@@ -167,6 +167,14 @@ func AddMakeTargets(opts TargetOptions) error {
 		return err
 	}
 
+	istioProxyCentos7Target, err := IstioProxyCentos7Target(opts)
+	if err != nil {
+		return err
+	}
+	if _, err := f.WriteString(istioProxyCentos7Target); err != nil {
+		return err
+	}
+
 	envoyTarget, err := EnvoyTarget(opts)
 	if err != nil {
 		return err
@@ -203,6 +211,59 @@ func buildConfigFlags(proxyDir string) (string, error) {
 
 	// For older version, we need to explicitly enable --config=libc++.
 	return "--config=release --config=libc++", nil
+}
+
+func IstioProxyCentos7Target(opts TargetOptions) (string, error) {
+	target, binaryPath, err := istioProxyEnvoyBinaryTarget(opts.ProxyDir)
+	if err != nil {
+		return "", err
+	}
+
+	buildConfig, err := buildConfigFlags(opts.ProxyDir)
+	if err != nil {
+		return "", err
+	}
+
+	var remoteCache string
+	if len(opts.RemoteCache) > 0 {
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
+	}
+
+	var boringssl string
+	if opts.FIPSBuild {
+		boringssl = "--define=boringssl=fips"
+	}
+
+	var ldLibraryPath string
+	if runtime.GOARCH == "amd64" {
+		// TODO(dio): Normalize this. gcr.io/tetratelabs/envoy-build-centos:1 has intalled llvm in /opt/llvm vs. /usr/lib/llvm.
+		ldLibraryPath = "--action_env=LD_LIBRARY_PATH=/opt/llvm/lib/x86_64-unknown-linux-gnu --host_action_env=LD_LIBRARY_PATH=/opt/llvm/lib/x86_64-unknown-linux-gnu"
+	}
+
+	var targzSuffix string
+	if opts.FIPSBuild {
+		targzSuffix = "-fips"
+	}
+	targz := "istio-proxy-centos7" + targzSuffix + "-" + runtime.GOARCH + ".tar.gz"
+	content := `
+istio-proxy-centos7-status:
+	cp -f bazel/bazel_get_workspace_status_istio-proxy bazel/bazel_get_workspace_status
+
+istio-proxy-centos7: istio-proxy-centos7-status
+	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
+	mkdir -p /work/out/usr/local/bin
+	cp -f %s /work/out/usr/local/bin/envoy
+	tar -czf /work/out/%s -C /work/out usr
+`
+	return fmt.Sprintf(content,
+		buildConfig,
+		boringssl,
+		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
+		target+".stripped",
+		remoteCache,
+		ldLibraryPath,
+		binaryPath+".stripped",
+		targz), nil
 }
 
 func IstioProxyTarget(opts TargetOptions) (string, error) {

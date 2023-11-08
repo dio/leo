@@ -112,6 +112,12 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		remoteProxyDir = "proxy"
 		remoteProxyRef = "alpha-" + istioProxyRef
 
+	case "istio-proxy-centos7":
+		tag = path.Join("istio", b.Version[0:7], "proxy", istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
+		title = "istio-proxy@" + istioProxyRef[0:7]
+		remoteProxyDir = "proxy"
+		remoteProxyRef = "centos-alpha-" + istioProxyRef
+
 	case "envoy-contrib":
 		tag = path.Join(b.Envoy.Name(), b.Envoy.Version()[0:7])
 		title = b.Envoy.Name() + "-contrib@" + b.Envoy.Version()[0:7]

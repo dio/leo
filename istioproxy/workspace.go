@@ -183,6 +183,14 @@ func AddMakeTargets(opts TargetOptions) error {
 		return err
 	}
 
+	envoyCentos7Target, err := EnvoyCentos7Target(opts)
+	if err != nil {
+		return err
+	}
+	if _, err := f.WriteString(envoyCentos7Target); err != nil {
+		return err
+	}
+
 	envoyContribTarget, err := EnvoyContribTarget(opts)
 	if err != nil {
 		return err
@@ -355,6 +363,66 @@ envoy-status:
 	cp -f bazel/bazel_get_workspace_status_envoy bazel/bazel_get_workspace_status
 
 envoy: envoy-status
+	bazel build %s %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
+	mkdir -p /work/out
+	cp -f %s %s/envoy
+	tar -czf /work/out/%s -C %s envoy
+`
+	return fmt.Sprintf(content,
+		buildConfig,
+		boringssl,
+		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
+		strings.Replace(filepath.Join(opts.EnvoyDir, "source", "extensions"), opts.ProxyDir, "", 1),
+		target,
+		remoteCache,
+		ldLibraryPath,
+
+		// Rename binary.
+		binaryPath,
+		filepath.Dir(binaryPath),
+
+		// tar -czf.
+		targz,
+		filepath.Dir(binaryPath)), nil
+}
+
+func EnvoyCentos7Target(opts TargetOptions) (string, error) {
+	target := "@envoy//source/exe:envoy-static.stripped"
+	binaryPath := "bazel-bin/external/envoy/source/exe/envoy-static.stripped"
+	var remoteCache string
+	if len(opts.RemoteCache) > 0 {
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
+	}
+
+	buildConfig, err := buildConfigFlags(opts.ProxyDir)
+	if err != nil {
+		return "", err
+	}
+
+	var boringssl string
+	if opts.FIPSBuild {
+		boringssl = "--define=boringssl=fips"
+	}
+	// Write a WORKSPACE to source/extensions.
+	if err := os.WriteFile(filepath.Join(opts.EnvoyDir, "source", "extensions", "WORKSPACE"), []byte{}, os.ModePerm); err != nil {
+		return "", err
+	}
+
+	var ldLibraryPath string
+	if runtime.GOARCH == "amd64" {
+		ldLibraryPath = "--action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu --host_action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu"
+	}
+
+	var targzSuffix string
+	if opts.FIPSBuild {
+		targzSuffix = "-fips"
+	}
+	targz := "envoy" + targzSuffix + "-" + runtime.GOARCH + ".tar.gz"
+	content := `
+envoy-centos7-status:
+	cp -f bazel/bazel_get_workspace_status_envoy bazel/bazel_get_workspace_status
+
+envoy-centos7: envoy-centos7-status
 	bazel build %s %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy

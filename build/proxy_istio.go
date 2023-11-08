@@ -123,11 +123,18 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		title = b.Envoy.Name() + "-contrib@" + b.Envoy.Version()[0:7]
 		remoteProxyDir = "envoy-contrib"
 		remoteProxyRef = b.Envoy.Version()
+
 	case "envoy":
 		tag = path.Join(b.Envoy.Name(), b.Envoy.Version()[0:7])
 		title = b.Envoy.Name() + "@" + b.Envoy.Version()[0:7]
 		remoteProxyDir = "envoy"
 		remoteProxyRef = b.Envoy.Version()
+
+	case "envoy-centos7":
+		tag = path.Join(b.Envoy.Name(), b.Envoy.Version()[0:7])
+		title = b.Envoy.Name() + "@" + b.Envoy.Version()[0:7]
+		remoteProxyDir = "envoy"
+		remoteProxyRef = "centos-" + b.Envoy.Version()
 	}
 
 	out := path.Join(b.output.Dir, "*.tar.gz")

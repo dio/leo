@@ -113,6 +113,7 @@ type TargetOptions struct {
 	EnvoyVersion string
 	RemoteCache  string // Remote cache values: us-central1 or asia-south2.
 	FIPSBuild    bool
+	Wasm         bool
 	EnvoyRepo    string
 }
 
@@ -300,6 +301,16 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 		ldLibraryPath = "--action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu --host_action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu"
 	}
 
+	var buildWasm string
+	if opts.Wasm {
+		buildWasm = "build_wasm"
+	}
+
+	var copyWasm string
+	if opts.Wasm {
+		copyWasm = "cp -f bazel-bin/extensions/*.wasm /work/out/"
+	}
+
 	var targzSuffix string
 	if opts.FIPSBuild {
 		targzSuffix = "-fips"
@@ -309,13 +320,15 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 istio-proxy-status:
 	cp -f bazel/bazel_get_workspace_status_istio-proxy bazel/bazel_get_workspace_status
 
-istio-proxy: istio-proxy-status
+istio-proxy: istio-proxy-status %s
 	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
 	mkdir -p /work/out/usr/local/bin
 	cp -f %s /work/out/usr/local/bin/envoy
 	tar -czf /work/out/%s -C /work/out usr
+	%s
 `
 	return fmt.Sprintf(content,
+		buildWasm,
 		buildConfig,
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
@@ -323,7 +336,9 @@ istio-proxy: istio-proxy-status
 		remoteCache,
 		ldLibraryPath,
 		binaryPath+".stripped",
-		targz), nil
+		targz,
+		copyWasm,
+	), nil
 }
 
 func EnvoyTarget(opts TargetOptions) (string, error) {

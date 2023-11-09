@@ -121,6 +121,7 @@ var (
 	overrideEnvoy string
 	patchSource   string
 	fipsBuild     bool
+	wasm          bool
 	remoteCache   string
 	target        string
 	arch          string
@@ -138,7 +139,7 @@ var (
 		Short: "Proxy build info",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideEnvoy, patchSource, remoteCache, fipsBuild, nil)
+			builder, err := build.NewProxyBuilder(args[0], overrideEnvoy, patchSource, remoteCache, fipsBuild, wasm, nil)
 			if err != nil {
 				return err
 			}
@@ -151,7 +152,7 @@ var (
 		Short: "Proxy build output",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideEnvoy, patchSource, remoteCache, fipsBuild, &build.Output{
+			builder, err := build.NewProxyBuilder(args[0], overrideEnvoy, patchSource, remoteCache, fipsBuild, wasm, &build.Output{
 				Target: target,
 				Arch:   arch,
 			})
@@ -167,7 +168,7 @@ var (
 		Short: "Proxy release",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideEnvoy, patchSource, remoteCache, fipsBuild, &build.Output{
+			builder, err := build.NewProxyBuilder(args[0], overrideEnvoy, patchSource, remoteCache, fipsBuild, wasm, &build.Output{
 				Target: target,
 				Arch:   arch,
 				Repo:   repo,
@@ -185,7 +186,7 @@ var (
 		Short: "Build proxy based-on flavors",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideEnvoy, patchSource, remoteCache, fipsBuild, nil)
+			builder, err := build.NewProxyBuilder(args[0], overrideEnvoy, patchSource, remoteCache, fipsBuild, wasm, nil)
 			if err != nil {
 				return err
 			}
@@ -228,6 +229,7 @@ func init() {
 	proxyCmd.PersistentFlags().StringVar(&overrideEnvoy, "override-envoy", "", "Override Envoy repository. For example: tetratelabs/envoy@88a80e6bbbee56de8c3899c75eaf36c46fad1aa7")
 	proxyCmd.PersistentFlags().StringVar(&patchSource, "patch-source", "github://dio/leo", "Patch source. For example: file://patches")
 	proxyCmd.PersistentFlags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
+	proxyCmd.PersistentFlags().BoolVar(&wasm, "wasm", false, "Build wasm")
 	proxyCmd.PersistentFlags().StringVar(&remoteCache, "remote-cache", "", "Remote cache. E.g. us-central1, asia-south2")
 	proxyOutputCmd.Flags().StringVar(&target, "target", "istio-proxy", "Build target, i.e. envoy, istio-proxy")
 	proxyOutputCmd.Flags().StringVar(&arch, "arch", runtime.GOARCH, "Builder architecture")

@@ -22,6 +22,7 @@ type IstioProxyBuilder struct {
 	Envoy     arg.Version
 	Patch     patch.Getter
 	FIPSBuild bool
+	Wasm      bool
 
 	remoteCache string
 	output      *Output
@@ -162,6 +163,23 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		remoteFile := path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
 		if err := sh.RunV(ctx, "gsutil", "cp", file, "gs://"+remoteFile); err != nil {
 			return err
+		}
+	}
+
+	// Upload wasm files.
+	wasmOut := path.Join(b.output.Dir, "*.wasm")
+	wasmFiles, err := filepath.Glob(wasmOut)
+	if err != nil {
+		return err
+	}
+	for _, file := range wasmFiles {
+		if strings.HasSuffix(file, ".wasm") {
+			remoteFile := path.Join("tetrate-istio-distro-build",
+				remoteProxyDir, strings.Replace(file, ".wasm", "-"+istioProxyRef+".wasm", 1))
+			if err := sh.RunV(ctx, "gsutil", "cp", file, "gs://"+remoteFile); err != nil {
+				return err
+			}
+			continue
 		}
 	}
 

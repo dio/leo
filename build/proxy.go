@@ -14,7 +14,7 @@ type Output struct {
 	Dir    string
 }
 
-func NewProxyBuilder(target, overrideEnvoy, patchSource, remoteCache string, fipsBuild bool, output *Output) (*ProxyBuilder, error) {
+func NewProxyBuilder(target, overrideEnvoy, patchSource, remoteCache string, fipsBuild, wasm bool, output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 
 	patchGetterSource := patch.Source(patchSource)
@@ -46,6 +46,7 @@ type ProxyBuilder struct {
 	envoy       arg.Version
 	patchGetter patch.Getter
 	fipsBuild   bool
+	wasm        bool
 	remoteCache string
 
 	// these are for output
@@ -60,6 +61,7 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 			Envoy:       b.envoy,
 			Patch:       b.patchGetter,
 			FIPSBuild:   b.fipsBuild,
+			Wasm:        b.wasm,
 			remoteCache: b.remoteCache,
 		}
 		return builder.Info(ctx)
@@ -76,6 +78,7 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 			Envoy:       b.envoy,
 			Patch:       b.patchGetter,
 			FIPSBuild:   b.fipsBuild,
+			Wasm:        b.wasm,
 			output:      b.output,
 			remoteCache: b.remoteCache,
 		}
@@ -93,6 +96,7 @@ func (b *ProxyBuilder) Release(ctx context.Context) error {
 			Envoy:       b.envoy,
 			Patch:       b.patchGetter,
 			FIPSBuild:   b.fipsBuild,
+			Wasm:        b.wasm,
 			output:      b.output,
 			remoteCache: b.remoteCache,
 		}
@@ -110,6 +114,7 @@ func (b *ProxyBuilder) Build(ctx context.Context) error {
 			Envoy:       b.envoy,
 			Patch:       b.patchGetter,
 			FIPSBuild:   b.fipsBuild,
+			Wasm:        b.wasm,
 			remoteCache: b.remoteCache,
 		}
 		return builder.Build(ctx)

@@ -36,6 +36,7 @@ func NewProxyBuilder(target, overrideEnvoy, patchSource, remoteCache string, fip
 		envoy:       arg.Version(overrideEnvoy),
 		patchGetter: patchGetter,
 		fipsBuild:   fipsBuild,
+		wasm:        wasm,
 		output:      output,
 		remoteCache: remoteCache,
 	}, nil

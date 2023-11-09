@@ -266,6 +266,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		EnvoyRepo:    b.Envoy.Name(),
 		IstioVersion: b.Version,
 		FIPSBuild:    b.FIPSBuild,
+		Wasm:         b.Wasm,
 		RemoteCache:  b.remoteCache,
 	}); err != nil {
 		return err

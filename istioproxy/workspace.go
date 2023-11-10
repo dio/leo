@@ -269,6 +269,7 @@ istio-proxy-centos7: istio-proxy-centos7-status
 	mkdir -p /work/out/usr/local/bin
 	cp -f %s /work/out/usr/local/bin/envoy
 	tar -czf /work/out/%s -C /work/out usr
+	rm -fr /work/out/usr
 `
 	return fmt.Sprintf(content,
 		buildConfig,
@@ -330,6 +331,7 @@ istio-proxy: istio-proxy-status %s
 	mkdir -p /work/out/usr/local/bin
 	cp -f %s /work/out/usr/local/bin/envoy
 	tar -czf /work/out/%s -C /work/out usr
+	rm -fr /work/out/usr
 %s
 `
 	return fmt.Sprintf(content,

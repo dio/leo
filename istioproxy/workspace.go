@@ -309,7 +309,7 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 
 	var buildWasm string
 	var copyWasm string
-	if opts.Wasm {
+	if opts.Wasm && !opts.FIPSBuild {
 		buildWasm = "build_wasm"
 		copyWasm = `
 	cp -f bazel-bin/extensions/*.wasm /work/out/

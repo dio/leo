@@ -88,9 +88,7 @@ func (b *IstioProxyBuilder) Output(ctx context.Context) error {
 		return err
 	}
 
-	out := path.Join("work", "proxy-"+istioProxyRef, "out", "*.tar.gz")
-	out += " " + path.Join("work", "proxy-"+istioProxyRef, "out", "*.wasm")
-
+	out := path.Join("work", "proxy-"+istioProxyRef, "out", "*")
 	fmt.Print(out)
 
 	return nil

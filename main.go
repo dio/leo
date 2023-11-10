@@ -229,7 +229,7 @@ func init() {
 	proxyCmd.PersistentFlags().StringVar(&overrideEnvoy, "override-envoy", "", "Override Envoy repository. For example: tetratelabs/envoy@88a80e6bbbee56de8c3899c75eaf36c46fad1aa7")
 	proxyCmd.PersistentFlags().StringVar(&patchSource, "patch-source", "github://dio/leo", "Patch source. For example: file://patches")
 	proxyCmd.PersistentFlags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
-	proxyCmd.PersistentFlags().BoolVar(&wasm, "wasm", true, "Build wasm")
+	proxyCmd.PersistentFlags().BoolVar(&wasm, "wasm", runtime.GOARCH == "amd64", "Build wasm")
 	proxyCmd.PersistentFlags().StringVar(&remoteCache, "remote-cache", "", "Remote cache. E.g. us-central1, asia-south2")
 	proxyOutputCmd.Flags().StringVar(&target, "target", "istio-proxy", "Build target, i.e. envoy, istio-proxy")
 	proxyOutputCmd.Flags().StringVar(&arch, "arch", runtime.GOARCH, "Builder architecture")

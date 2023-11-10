@@ -174,11 +174,12 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 	}
 	for _, file := range wasmFiles {
 		if strings.HasSuffix(file, ".wasm") {
+			baseName := filepath.Base(file)
 			remoteFile := path.Join("tetrate-istio-distro-build",
-				remoteProxyDir, strings.Replace(file, ".wasm", "-"+istioProxyRef+".wasm", 1))
+				remoteProxyDir, strings.Replace(baseName, ".wasm", "-"+istioProxyRef+".wasm", 1))
 			if strings.HasSuffix(file, ".compiled.wasm") {
 				remoteFile = path.Join("tetrate-istio-distro-build",
-					remoteProxyDir, strings.Replace(file, ".compiled.wasm", "-"+istioProxyRef+".compiled.wasm", 1))
+					remoteProxyDir, strings.Replace(baseName, ".compiled.wasm", "-"+istioProxyRef+".compiled.wasm", 1))
 			}
 
 			if err := sh.RunV(ctx, "gsutil", "cp", file, "gs://"+remoteFile); err != nil {

@@ -311,7 +311,7 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 	var buildWasm string
 	var copyWasm string
 	if opts.Wasm && !opts.FIPSBuild {
-		buildWasm = "build_wasm"
+		buildWasm = "build-wasm"
 		copyWasm = `
 	cp -f bazel-bin/extensions/*.wasm /work/out/
 `
@@ -334,6 +334,10 @@ istio-proxy: istio-proxy-status %s
 	rm -fr /work/out/usr
 %s
 `
+	if opts.Wasm {
+		content += buildWasmTarget(strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1))
+	}
+
 	return fmt.Sprintf(content,
 		buildWasm,
 		buildConfig,
@@ -523,4 +527,17 @@ envoy-contrib: envoy-contrib-status
 		// tar -czf.
 		targz,
 		filepath.Dir(binaryPath)), nil
+}
+
+func buildWasmTarget(override string) string {
+	return fmt.Sprintf(`
+build-wasm: istio-proxy-status
+	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work%s $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) //extensions:stats.wasm
+	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work%s $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) //extensions:metadata_exchange.wasm
+	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work%s $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) //extensions:attributegen.wasm
+	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work%s $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) @envoy//test/tools/wee8_compile:wee8_compile_tool
+	bazel-bin/external/envoy/test/tools/wee8_compile/wee8_compile_tool bazel-bin/extensions/stats.wasm bazel-bin/extensions/stats.compiled.wasm
+	bazel-bin/external/envoy/test/tools/wee8_compile/wee8_compile_tool bazel-bin/extensions/metadata_exchange.wasm bazel-bin/extensions/metadata_exchange.compiled.wasm
+	bazel-bin/external/envoy/test/tools/wee8_compile/wee8_compile_tool bazel-bin/extensions/attributegen.wasm bazel-bin/extensions/attributegen.compiled.wasm
+`, override, override, override, override)
 }

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"path"
 	"path/filepath"
@@ -12,6 +13,32 @@ import (
 	"github.com/dio/leo/github"
 	"github.com/dio/sh"
 )
+
+type version struct {
+	Version string `json:"version"`
+}
+
+func GetLatestGoVersion(ctx context.Context) (string, error) {
+	args := []string{
+		"-fsSL",
+		"-H", "Accept: application/vnd.github.v3.json",
+		"https://go.dev/dl/?mode=json",
+	}
+	out, err := sh.Output(ctx, "curl", args...)
+	if err != nil {
+		return "", err
+	}
+	var versions []version
+	if err := json.Unmarshal([]byte(out), &versions); err != nil {
+		return "", err
+	}
+	if len(versions) == 0 {
+		// https://go.dev/dl/go1.21.4.linux-amd64.tar.gz.
+		return "go1.21.4", nil
+	}
+
+	return versions[0].Version, nil
+}
 
 func GetTarballAndExtract(ctx context.Context, repo, ref, dir string) (string, error) {
 	tmp, err := os.MkdirTemp(os.TempDir(), "leo.*")

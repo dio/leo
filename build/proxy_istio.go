@@ -89,6 +89,14 @@ func (b *IstioProxyBuilder) Output(ctx context.Context) error {
 	}
 
 	out := path.Join("work", "proxy-"+istioProxyRef, "out", "*.tar.gz")
+	wasmFiles, err := filepath.Glob(path.Join("work", "proxy-"+istioProxyRef, "out", "*.wasm"))
+	if err != nil {
+		return err
+	}
+	if len(wasmFiles) > 0 {
+		out += " " + path.Join("work", "proxy-"+istioProxyRef, "out", "*.wasm")
+	}
+
 	fmt.Print(out)
 
 	return nil
@@ -176,6 +184,11 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		if strings.HasSuffix(file, ".wasm") {
 			remoteFile := path.Join("tetrate-istio-distro-build",
 				remoteProxyDir, strings.Replace(file, ".wasm", "-"+istioProxyRef+".wasm", 1))
+			if strings.HasSuffix(file, ".compiled.wasm") {
+				remoteFile = path.Join("tetrate-istio-distro-build",
+					remoteProxyDir, strings.Replace(file, ".compiled.wasm", "-"+istioProxyRef+".compiled.wasm", 1))
+			}
+
 			if err := sh.RunV(ctx, "gsutil", "cp", file, "gs://"+remoteFile); err != nil {
 				return err
 			}
@@ -272,7 +285,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		return err
 	}
 
-	if err := istioproxy.PrepareBuilder(istioProxyDir); err != nil {
+	if err := istioproxy.PrepareBuilder(istioProxyDir, b.remoteCache); err != nil {
 		return err
 	}
 

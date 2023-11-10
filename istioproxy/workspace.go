@@ -117,7 +117,12 @@ type TargetOptions struct {
 	EnvoyRepo    string
 }
 
-func PrepareBuilder(proxyDir string) error {
+func PrepareBuilder(proxyDir, remote string) error {
+	var remoteCache string
+	if len(remote) > 0 {
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + remote
+	}
+
 	if err := os.WriteFile(filepath.Join(proxyDir, "common", "scripts", "Dockerfile"),
 		[]byte(`# Generated.
 ARG IMG
@@ -126,11 +131,12 @@ FROM ubuntu:20.04 AS linux_headers_amd64
 FROM ubuntu:20.04 AS linux_headers_arm64
 
 FROM linux_headers_${TARGETARCH} AS linux_headers
-RUN apt-get update && apt-get install -y --no-install-recommends linux-libc-dev
+RUN apt-get -q update && apt-get install -yqq --no-install-recommends linux-libc-dev
 
 FROM $IMG
 COPY --from=linux_headers /usr/include/linux/tcp.h /usr/include/linux/tcp.h
-`),
+RUN su-exec 0:0 apt-get -q update && apt-get install -yqq --no-install-recommends rsync
+ENV BAZEL_BUILD_ARGS="`+remoteCache+`"`),
 		os.ModePerm); err != nil {
 		return err
 	}
@@ -305,7 +311,9 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 	var copyWasm string
 	if opts.Wasm {
 		buildWasm = "build_wasm"
-		copyWasm = "cp -f bazel-bin/extensions/*.wasm /work/out/"
+		copyWasm = `
+	cp -f bazel-bin/extensions/*.wasm /work/out/
+`
 	}
 
 	var targzSuffix string
@@ -322,7 +330,7 @@ istio-proxy: istio-proxy-status %s
 	mkdir -p /work/out/usr/local/bin
 	cp -f %s /work/out/usr/local/bin/envoy
 	tar -czf /work/out/%s -C /work/out usr
-	%s
+%s
 `
 	return fmt.Sprintf(content,
 		buildWasm,

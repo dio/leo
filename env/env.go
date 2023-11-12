@@ -1,14 +1,17 @@
 package env
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 
+	"github.com/dio/sh"
 	"github.com/jdxcode/netrc"
 	"github.com/mitchellh/go-homedir"
 )
 
 var GH_TOKEN = Var("GH_TOKEN").GetOr(fromNetrc())
+var GCLOUD_TOKEN = Var("GCLOUD_TOKEN").GetOr(fromGcloudPrintToken())
 
 type Var string
 
@@ -36,4 +39,12 @@ func fromNetrc() string {
 	}
 
 	return parsed.Machine("github.com").Get("password")
+}
+
+func fromGcloudPrintToken() string {
+	token, err := sh.Output(context.Background(), "gcloud", "auth", "print-access-token")
+	if err != nil {
+		return ""
+	}
+	return token
 }

@@ -52,7 +52,7 @@ func GetTarballAndExtract(ctx context.Context, repo, ref, dir string) (string, e
 	}
 
 	_ = os.MkdirAll(dir, os.ModePerm)
-	if err := sh.Run(ctx, "tar", "-C", dir, "-xzf", targz); err != nil {
+	if err := sh.Run(ctx, "tar", "-xzf", targz, "-C", dir); err != nil {
 		return "", err
 	}
 

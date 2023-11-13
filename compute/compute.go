@@ -67,8 +67,9 @@ func (i *Instance) Create(ctx context.Context, machineType, machineImage string)
 			Disks: []*computepb.AttachedDisk{
 				{
 					InitializeParams: &computepb.AttachedDiskInitializeParams{
-						DiskSizeGb: proto.Int64(80),
-						DiskType:   proto.String("projects/" + i.ProjectID + "/zones/" + i.Zone + "/diskTypes/pd-balanced"),
+						DiskSizeGb:  proto.Int64(80),
+						DiskType:    proto.String("projects/" + i.ProjectID + "/zones/" + i.Zone + "/diskTypes/pd-balanced"),
+						SourceImage: proto.String("projects/" + i.ProjectID + "/global/images/" + machineImage),
 					},
 					AutoDelete: proto.Bool(true),
 					Boot:       proto.Bool(true),
@@ -98,8 +99,7 @@ func (i *Instance) Create(ctx context.Context, machineType, machineImage string)
 					},
 				},
 			},
-			MinCpuPlatform:     proto.String("Automatic"),
-			SourceMachineImage: proto.String("projects/" + i.ProjectID + "/global/machineImages/" + machineImage),
+			MinCpuPlatform: proto.String("Automatic"),
 			Scheduling: &computepb.Scheduling{
 				ProvisioningModel:         proto.String("SPOT"),
 				OnHostMaintenance:         proto.String("TERMINATE"),

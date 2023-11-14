@@ -335,7 +335,7 @@ istio-proxy: istio-proxy-status %s
 %s
 `
 	if opts.Wasm {
-		content += buildWasmTarget(strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1))
+		content += buildWasmTarget(filepath.Join(opts.ProxyDir, "Makefile.core.mk"), strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1))
 	}
 
 	return fmt.Sprintf(content,
@@ -529,15 +529,30 @@ envoy-contrib: envoy-contrib-status
 		filepath.Dir(binaryPath)), nil
 }
 
-func buildWasmTarget(override string) string {
-	return fmt.Sprintf(`
-build-wasm: istio-proxy-status
-	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work%s $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) //extensions:stats.wasm
-	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work%s $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) //extensions:metadata_exchange.wasm
-	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work%s $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) //extensions:attributegen.wasm
-	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work%s $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) @envoy//test/tools/wee8_compile:wee8_compile_tool
-	bazel-bin/external/envoy/test/tools/wee8_compile/wee8_compile_tool bazel-bin/extensions/stats.wasm bazel-bin/extensions/stats.compiled.wasm
-	bazel-bin/external/envoy/test/tools/wee8_compile/wee8_compile_tool bazel-bin/extensions/metadata_exchange.wasm bazel-bin/extensions/metadata_exchange.compiled.wasm
-	bazel-bin/external/envoy/test/tools/wee8_compile/wee8_compile_tool bazel-bin/extensions/attributegen.wasm bazel-bin/extensions/attributegen.compiled.wasm
-`, override, override, override, override)
+func buildWasmTarget(makefileCoreMk, override string) string {
+	b, err := os.ReadFile(makefileCoreMk)
+	if err != nil {
+		return ""
+	}
+	scanner := bufio.NewScanner(strings.NewReader(string(b)))
+	var target string
+	var start bool
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "build_wasm:") && !start {
+			start = true
+		}
+
+		if start {
+			if len(strings.TrimSpace(line)) == 0 ||
+				// Or if we found another target.
+				(strings.HasSuffix(strings.TrimSpace(line), ":") && len(target) > 0) {
+				break
+			}
+			target += line + "\n"
+		}
+	}
+	target = strings.Replace(target, "build_wasm:", "build-wasm: istio-proxy-status", 1)
+	target = strings.ReplaceAll(target, "$(BAZEL_BUILD_ARGS)", "$(BAZEL_BUILD_ARGS) --override_repository=envoy=/work"+override)
+	return target
 }

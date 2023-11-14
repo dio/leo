@@ -12,7 +12,7 @@ import (
 
 var GH_TOKEN = Var("GH_TOKEN").GetOr(fromNetrc())
 var GCLOUD_TOKEN = Var("GCLOUD_TOKEN").GetOr(fromGcloudPrintToken())
-var GCLOUD_SKIP = Var("GCLOUD_SKIP")
+var GCLOUD_SKIP = Var("GCLOUD_SKIP").Get()
 
 type Var string
 

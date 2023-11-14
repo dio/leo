@@ -12,6 +12,7 @@ import (
 
 var GH_TOKEN = Var("GH_TOKEN").GetOr(fromNetrc())
 var GCLOUD_TOKEN = Var("GCLOUD_TOKEN").GetOr(fromGcloudPrintToken())
+var GCLOUD_SKIP = Var("GCLOUD_SKIP")
 
 type Var string
 
@@ -42,6 +43,9 @@ func fromNetrc() string {
 }
 
 func fromGcloudPrintToken() string {
+	if len(GCLOUD_SKIP) > 0 {
+		return ""
+	}
 	token, err := sh.Output(context.Background(), "gcloud", "auth", "print-access-token")
 	if err != nil {
 		return ""

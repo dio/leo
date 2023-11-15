@@ -31,7 +31,7 @@ type IstioProxyBuilder struct {
 
 func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
 	istioRepo := "istio/istio"
-	if len(b.Istio.Repo().Owner()) == 0 {
+	if len(b.Istio.Repo().Owner()) != 0 {
 		istioRepo = string(b.Istio.Repo())
 	}
 
@@ -80,11 +80,12 @@ func (b *IstioProxyBuilder) Info(ctx context.Context) error {
 	}
 
 	fmt.Fprintf(os.Stderr, `build info:
+  istio: %s
   workspace: istio/proxy@%s
   envoy: %s
   envoyVersion: %s
   fips: %v
-`, istioProxyRef, b.Envoy, envoyVersion, b.FIPSBuild)
+`, b.Istio, istioProxyRef, b.Envoy, envoyVersion, b.FIPSBuild)
 	return nil
 }
 
@@ -196,10 +197,10 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 	}
 
 	notes := fmt.Sprintf(`
-- https://github.com/istio/istio/commits/%s
+- https://github.com/%s/commits/%s
 - https://github.com/istio/proxy/commits/%s
 - https://github.com/%s/commits/%s
-`, b.Version[0:7], istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
+`, b.Istio.Repo(), b.Version[0:7], istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
 
 	if err := sh.RunV(ctx, "gh", "release", "view", tag, "-R", b.output.Repo); err != nil {
 		if err := sh.RunV(ctx, "gh", append([]string{"release", "create", tag, "-n", notes, "-t", title, "-R", b.output.Repo}, files...)...); err == nil {
@@ -216,11 +217,12 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 	}
 
 	fmt.Fprintf(os.Stderr, `build info:
+  istio: %s
   workspace: istio/proxy@%s
   envoy: %s
   envoyVersion: %s
   fips: %v
-`, istioProxyRef, b.Envoy, envoyVersion, b.FIPSBuild)
+`, b.Istio, istioProxyRef, b.Envoy, envoyVersion, b.FIPSBuild)
 
 	istioProxyDir, err := utils.GetTarballAndExtract(ctx, "istio/proxy", istioProxyRef, "work")
 	if err != nil {

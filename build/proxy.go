@@ -55,9 +55,10 @@ type ProxyBuilder struct {
 }
 
 func (b *ProxyBuilder) Info(ctx context.Context) error {
-	switch b.target.Name() {
+	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
+			Istio:       b.target,
 			Version:     b.target.Version(),
 			Envoy:       b.envoy,
 			Patch:       b.patchGetter,
@@ -72,9 +73,10 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 }
 
 func (b *ProxyBuilder) Output(ctx context.Context) error {
-	switch b.target.Name() {
+	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
+			Istio:       b.target,
 			Version:     b.target.Version(),
 			Envoy:       b.envoy,
 			Patch:       b.patchGetter,
@@ -90,9 +92,10 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 }
 
 func (b *ProxyBuilder) Release(ctx context.Context) error {
-	switch b.target.Name() {
+	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
+			Istio:       b.target,
 			Version:     b.target.Version(),
 			Envoy:       b.envoy,
 			Patch:       b.patchGetter,
@@ -108,9 +111,10 @@ func (b *ProxyBuilder) Release(ctx context.Context) error {
 }
 
 func (b *ProxyBuilder) Build(ctx context.Context) error {
-	switch b.target.Name() {
+	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
+			Istio:       b.target,
 			Version:     b.target.Version(),
 			Envoy:       b.envoy,
 			Patch:       b.patchGetter,

@@ -18,6 +18,7 @@ import (
 )
 
 type IstioProxyBuilder struct {
+	Istio     arg.Version
 	Version   string
 	Envoy     arg.Version
 	Patch     patch.Getter
@@ -29,13 +30,18 @@ type IstioProxyBuilder struct {
 }
 
 func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
-	istioRef, err := github.ResolveCommitSHA(ctx, "istio/istio", b.Version)
+	istioRepo := "istio/istio"
+	if len(b.Istio.Repo().Owner()) == 0 {
+		istioRepo = string(b.Istio.Repo())
+	}
+
+	istioRef, err := github.ResolveCommitSHA(ctx, istioRepo, b.Version)
 	if err != nil {
 		return "", "", err
 	}
 	b.Version = istioRef
 
-	deps, err := istio.GetDeps(ctx, "istio/istio", b.Version)
+	deps, err := istio.GetDeps(ctx, istioRepo, b.Version)
 	if err != nil {
 		return "", "", err
 	}

@@ -9,5 +9,9 @@ func (r Repo) Name() string {
 }
 
 func (r Repo) Owner() string {
-	return filepath.Dir(string(r))
+	owner := filepath.Dir(string(r))
+	if owner == "." {
+		return ""
+	}
+	return owner
 }

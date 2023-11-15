@@ -557,7 +557,7 @@ func buildWasmTarget(makefileCoreMk, override string) string {
 
 	if target == "" {
 		return `
-build-wam:
+build-wasm:
 	@echo "no build_wasm anymore"
 `
 	}

@@ -139,7 +139,7 @@ func ResolveCommitSHA(ctx context.Context, repo, ref string) (string, error) {
 	}
 
 	// Check if the given ref is a "head" (i.e. branch).
-	sha, err = getRefSHA(ctx, repo, ref, "heads")
+	sha, err = GetRefSHA(ctx, repo, ref, "heads")
 	if err == nil {
 		return sha, nil
 	}
@@ -151,7 +151,7 @@ func ResolveCommitSHA(ctx context.Context, repo, ref string) (string, error) {
 	}
 
 	// Since this is a valid semver, we check it as a tag.
-	return getRefSHA(ctx, repo, ref, "tags")
+	return GetRefSHA(ctx, repo, ref, "tags")
 }
 
 func getCommit(ctx context.Context, repo, ref string) (string, error) {
@@ -173,7 +173,7 @@ func getCommit(ctx context.Context, repo, ref string) (string, error) {
 	return r.SHA, nil
 }
 
-func getRefSHA(ctx context.Context, repo, ref, refType string) (string, error) {
+func GetRefSHA(ctx context.Context, repo, ref, refType string) (string, error) {
 	args := []string{
 		"-fsSL",
 		"-H", "Accept: application/vnd.github.v3.json",

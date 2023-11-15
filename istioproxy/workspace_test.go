@@ -8,15 +8,6 @@ import (
 	"testing"
 )
 
-// build-wasm: istio-proxy-status
-// 	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work/envoy-2e4228b0ee73ae640c92e0974c91e251997a3d2f $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) //extensions:stats.wasm
-// 	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work/envoy-2e4228b0ee73ae640c92e0974c91e251997a3d2f $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) //extensions:metadata_exchange.wasm
-// 	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work/envoy-2e4228b0ee73ae640c92e0974c91e251997a3d2f $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) //extensions:attributegen.wasm
-// 	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && bazel $(BAZEL_STARTUP_ARGS) build --override_repository=envoy=/work/envoy-2e4228b0ee73ae640c92e0974c91e251997a3d2f $(BAZEL_BUILD_ARGS) $(BAZEL_CONFIG_REL) @envoy//test/tools/wee8_compile:wee8_compile_tool
-// 	bazel-bin/external/envoy/test/tools/wee8_compile/wee8_compile_tool bazel-bin/extensions/stats.wasm bazel-bin/extensions/stats.compiled.wasm
-// 	bazel-bin/external/envoy/test/tools/wee8_compile/wee8_compile_tool bazel-bin/extensions/metadata_exchange.wasm bazel-bin/extensions/metadata_exchange.compiled.wasm
-// 	bazel-bin/external/envoy/test/tools/wee8_compile/wee8_compile_tool bazel-bin/extensions/attributegen.wasm bazel-bin/extensions/attributegen.compiled.wasm
-
 func TestExtractBuildWasm(t *testing.T) {
 	b, _ := os.ReadFile("testdata/Makefile.core.mk")
 	scanner := bufio.NewScanner(strings.NewReader(string(b)))

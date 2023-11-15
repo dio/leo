@@ -554,5 +554,12 @@ func buildWasmTarget(makefileCoreMk, override string) string {
 	}
 	target = strings.Replace(target, "build_wasm:", "build-wasm: istio-proxy-status", 1)
 	target = strings.ReplaceAll(target, "$(BAZEL_BUILD_ARGS)", "$(BAZEL_BUILD_ARGS) --override_repository=envoy=/work"+override)
+
+	if target == "" {
+		return `
+build-wam:
+	@echo "no build_wasm anymore"
+`
+	}
 	return target
 }

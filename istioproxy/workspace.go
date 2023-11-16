@@ -559,6 +559,8 @@ func buildWasmTarget(makefileCoreMk, override string) string {
 		return `
 build-wasm:
 	@echo "no build_wasm anymore"
+	@mkdir -p bazel-bin/extensions
+	@touch bazel-bin/extensions/not.wasm
 `
 	}
 	return target

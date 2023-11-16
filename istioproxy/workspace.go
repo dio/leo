@@ -308,9 +308,10 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 		ldLibraryPath = "--action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu --host_action_env=LD_LIBRARY_PATH=/usr/lib/llvm/lib/x86_64-unknown-linux-gnu"
 	}
 
+	wasmTarget := buildWasmTarget(filepath.Join(opts.ProxyDir, "Makefile.core.mk"), strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1))
 	var buildWasm string
 	var copyWasm string
-	if opts.Wasm {
+	if opts.Wasm && len(wasmTarget) > 0 {
 		buildWasm = "build-wasm"
 		copyWasm = `
 	cp -f bazel-bin/extensions/*.wasm /work/out/
@@ -334,7 +335,7 @@ istio-proxy: istio-proxy-status %s
 	rm -fr /work/out/usr
 %s
 `
-	if opts.Wasm {
+	if opts.Wasm && len(wasmTarget) > 0 {
 		content += buildWasmTarget(filepath.Join(opts.ProxyDir, "Makefile.core.mk"), strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1))
 	}
 
@@ -555,13 +556,5 @@ func buildWasmTarget(makefileCoreMk, override string) string {
 	target = strings.Replace(target, "build_wasm:", "build-wasm: istio-proxy-status", 1)
 	target = strings.ReplaceAll(target, "$(BAZEL_BUILD_ARGS)", "$(BAZEL_BUILD_ARGS) --override_repository=envoy=/work"+override)
 
-	if target == "" {
-		return `
-build-wasm:
-	@echo "no build_wasm anymore"
-	@mkdir -p bazel-bin/extensions
-	@touch bazel-bin/extensions/not.wasm
-`
-	}
 	return target
 }

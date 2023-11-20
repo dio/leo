@@ -48,12 +48,24 @@ func (i *Instance) Delete(ctx context.Context) error {
 	return nil
 }
 
-func (i *Instance) Create(ctx context.Context, machineType, machineImage string) error {
+func (i *Instance) Create(ctx context.Context, machineType, machineImage string, nonSpot bool) error {
 	instance, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		return err
 	}
 	defer instance.Close()
+
+	sched := &computepb.Scheduling{
+		OnHostMaintenance:         proto.String("TERMINATE"),
+		InstanceTerminationAction: proto.String("DELETE"),
+		AutomaticRestart:          proto.Bool(false),
+	}
+
+	// NOT nonSpot means spot.
+	if !nonSpot {
+		sched.Preemptible = proto.Bool(true)
+		sched.ProvisioningModel = proto.String("SPOT")
+	}
 
 	req := &computepb.InsertInstanceRequest{
 		Project: i.ProjectID,
@@ -100,13 +112,7 @@ func (i *Instance) Create(ctx context.Context, machineType, machineImage string)
 				},
 			},
 			MinCpuPlatform: proto.String("Automatic"),
-			Scheduling: &computepb.Scheduling{
-				ProvisioningModel:         proto.String("SPOT"),
-				OnHostMaintenance:         proto.String("TERMINATE"),
-				InstanceTerminationAction: proto.String("DELETE"),
-				Preemptible:               proto.Bool(true),
-				AutomaticRestart:          proto.Bool(false),
-			},
+			Scheduling:     sched,
 		},
 	}
 

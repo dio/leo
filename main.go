@@ -67,7 +67,7 @@ var (
 				Zone:      zone,
 				Name:      instanceName,
 			}
-			return i.Create(cmd.Context(), machineType, machineImage)
+			return i.Create(cmd.Context(), machineType, machineImage, false)
 		},
 	}
 

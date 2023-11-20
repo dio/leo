@@ -56,15 +56,15 @@ func (i *Instance) Create(ctx context.Context, machineType, machineImage string,
 	defer instance.Close()
 
 	sched := &computepb.Scheduling{
-		OnHostMaintenance:         proto.String("TERMINATE"),
-		InstanceTerminationAction: proto.String("DELETE"),
-		AutomaticRestart:          proto.Bool(false),
+		OnHostMaintenance: proto.String("TERMINATE"),
+		AutomaticRestart:  proto.Bool(false),
 	}
 
 	// NOT nonSpot means spot.
 	if !nonSpot {
 		sched.Preemptible = proto.Bool(true)
 		sched.ProvisioningModel = proto.String("SPOT")
+		sched.InstanceTerminationAction = proto.String("DELETE")
 	}
 
 	req := &computepb.InsertInstanceRequest{

@@ -206,8 +206,10 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		if err := sh.RunV(ctx, "gh", append([]string{"release", "create", tag, "-n", notes, "-t", title, "-R", b.output.Repo}, files...)...); err == nil {
 			return err
 		}
+	} else {
+		return sh.RunV(ctx, "gh", append([]string{"release", "upload", tag, "--clobber", "-R", b.output.Repo}, files...)...)
 	}
-	return sh.RunV(ctx, "gh", append([]string{"release", "upload", tag, "--clobber", "-R", b.output.Repo}, files...)...)
+	return nil
 }
 
 func (b *IstioProxyBuilder) Build(ctx context.Context) error {

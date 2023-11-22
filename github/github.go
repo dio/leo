@@ -277,7 +277,6 @@ func GetNewerPatchRelease(ctx context.Context, version string) (string, error) {
 	}
 
 	for page := 1; page <= lastPage; page++ {
-		fmt.Println(page)
 		releases, err := GetReleases(ctx, "istio/istio", page)
 		if err != nil {
 			return "", err

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -225,6 +226,82 @@ func GetRefSHA(ctx context.Context, repo, ref, refType string) (string, error) {
 		return "", err
 	}
 	return r.Object.SHA, nil
+}
+
+// GetNewerRelease gets release newer than version (patch, minor, or major).
+func GetNewerMinorRelease(ctx context.Context, version string) (string, error) {
+	v, err := semver.NewVersion(version)
+	if err != nil {
+		return "", err
+	}
+
+	lastPage, err := GetLastReleasePageNumber(ctx, "istio/istio")
+	if err != nil {
+		return "", err
+	}
+
+	for page := 1; page <= lastPage; page++ {
+		releases, err := GetReleases(ctx, "istio/istio", page)
+		if err != nil {
+			return "", err
+		}
+		for _, release := range releases {
+			if strings.Contains(release.TagName, "-") {
+				continue
+			}
+
+			r, err := semver.NewVersion(release.TagName)
+			if err != nil {
+				return "", err
+			}
+
+			if r.Minor() > v.Minor() {
+				return release.TagName, nil
+			}
+		}
+	}
+	return "", errors.New("not found")
+}
+
+// GetNewerRelease gets release newer than version (patch, minor, or major).
+func GetNewerPatchRelease(ctx context.Context, version string) (string, error) {
+	v, err := semver.NewVersion(version)
+	if err != nil {
+		return "", err
+	}
+	majorMinor := fmt.Sprintf("%d.%d", v.Major(), v.Minor())
+
+	lastPage, err := GetLastReleasePageNumber(ctx, "istio/istio")
+	if err != nil {
+		return "", err
+	}
+
+	for page := 1; page <= lastPage; page++ {
+		fmt.Println(page)
+		releases, err := GetReleases(ctx, "istio/istio", page)
+		if err != nil {
+			return "", err
+		}
+		for _, release := range releases {
+			if strings.Contains(release.TagName, "-") {
+				continue
+			}
+
+			if !strings.HasPrefix(release.TagName, majorMinor) {
+				continue
+			}
+
+			r, err := semver.NewVersion(release.TagName)
+			if err != nil {
+				return "", err
+			}
+
+			if r.Patch() > v.Patch() {
+				return release.TagName, nil
+			}
+		}
+	}
+	return "", errors.New("not found")
 }
 
 func token() []string {

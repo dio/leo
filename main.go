@@ -23,10 +23,11 @@ var (
 		Short: "Your artifacts builder",
 	}
 
-	zone         string
-	instanceName string
-	machineType  string
-	machineImage string
+	zone               string
+	instanceName       string
+	serviceAccountName string
+	machineType        string
+	machineImage       string
 
 	computeCmd = &cobra.Command{
 		Use:   "compute <command> [flags]",
@@ -63,9 +64,10 @@ var (
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			i := &compute.Instance{
-				ProjectID: os.Getenv("GCLOUD_PROJECT"),
-				Zone:      zone,
-				Name:      instanceName,
+				ProjectID:          os.Getenv("GCLOUD_PROJECT"),
+				Zone:               zone,
+				Name:               instanceName,
+				ServiceAccountName: serviceAccountName,
 			}
 			return i.Create(cmd.Context(), machineType, machineImage, false)
 		},
@@ -219,6 +221,7 @@ func init() {
 	computeCmd.PersistentFlags().StringVar(&zone, "zone", "", "Zone")
 	computeCmd.PersistentFlags().StringVar(&instanceName, "instance", "", "Instance name")
 	computeCmd.PersistentFlags().StringVar(&machineType, "machine-type", "n2-standard-8", "Machine type")
+	computeCmd.PersistentFlags().StringVar(&serviceAccountName, "service-account-name", "tetrateio", "Service account name")
 	computeCmd.PersistentFlags().StringVar(&machineImage, "machine-image", "builder-amd64", "Machine image")
 	computeCmd.AddCommand(computeStartCmd)
 	computeCmd.AddCommand(computeStopCmd)

@@ -14,9 +14,10 @@ import (
 )
 
 type Instance struct {
-	ProjectID string
-	Zone      string
-	Name      string
+	ProjectID          string
+	ServiceAccountName string
+	Zone               string
+	Name               string
 }
 
 func (i *Instance) Region() string {
@@ -54,6 +55,10 @@ func (i *Instance) Create(ctx context.Context, machineType, machineImage string,
 		return err
 	}
 	defer instance.Close()
+
+	if i.ServiceAccountName == "" {
+		i.ServiceAccountName = "tetrateio"
+	}
 
 	sched := &computepb.Scheduling{
 		OnHostMaintenance: proto.String("TERMINATE"),
@@ -105,7 +110,7 @@ func (i *Instance) Create(ctx context.Context, machineType, machineImage string,
 			MachineType: proto.String("projects/" + i.ProjectID + "/zones/" + i.Zone + "/machineTypes/" + machineType),
 			ServiceAccounts: []*computepb.ServiceAccount{
 				{
-					Email: proto.String("tetrateio@" + i.ProjectID + ".iam.gserviceaccount.com"),
+					Email: proto.String(i.ServiceAccountName + "@" + i.ProjectID + ".iam.gserviceaccount.com"),
 					Scopes: []string{
 						"https://www.googleapis.com/auth/cloud-platform",
 					},

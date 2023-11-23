@@ -120,7 +120,7 @@ type TargetOptions struct {
 func PrepareBuilder(proxyDir, remote string) error {
 	var remoteCache string
 	if len(remote) > 0 {
-		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + remote
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + remote
 	}
 
 	if err := os.WriteFile(filepath.Join(proxyDir, "common", "scripts", "Dockerfile"),
@@ -241,7 +241,7 @@ func IstioProxyCentos7Target(opts TargetOptions) (string, error) {
 
 	var remoteCache string
 	if len(opts.RemoteCache) > 0 {
-		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + opts.RemoteCache
 	}
 
 	var boringssl string
@@ -295,7 +295,7 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 
 	var remoteCache string
 	if len(opts.RemoteCache) > 0 {
-		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + opts.RemoteCache
 	}
 
 	var boringssl string
@@ -358,7 +358,7 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 	binaryPath := "bazel-bin/external/envoy/source/exe/envoy-static.stripped"
 	var remoteCache string
 	if len(opts.RemoteCache) > 0 {
-		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + opts.RemoteCache
 	}
 
 	buildConfig, err := buildConfigFlags(opts.ProxyDir)
@@ -418,7 +418,7 @@ func EnvoyCentos7Target(opts TargetOptions) (string, error) {
 	binaryPath := "bazel-bin/external/envoy/source/exe/envoy-static.stripped"
 	var remoteCache string
 	if len(opts.RemoteCache) > 0 {
-		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + opts.RemoteCache
 	}
 
 	buildConfig, err := buildConfigFlags(opts.ProxyDir)
@@ -478,7 +478,7 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 	binaryPath := "bazel-bin/external/envoy/contrib/exe/envoy-static.stripped"
 	var remoteCache string
 	if len(opts.RemoteCache) > 0 {
-		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/proxy-builder-" + opts.RemoteCache
+		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + opts.RemoteCache
 	}
 
 	buildConfig, err := buildConfigFlags(opts.ProxyDir)

@@ -167,7 +167,7 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 			continue
 		}
 		// Upload to GCS.
-		remoteFile := path.Join("tetrate-istio-distro-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
+		remoteFile := path.Join("tetrate-istio-subscription-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
 		if err := sh.RunV(ctx, "gsutil", "cp", file, "gs://"+remoteFile); err != nil {
 			return err
 		}
@@ -182,10 +182,10 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 	for _, file := range wasmFiles {
 		if strings.HasSuffix(file, ".wasm") {
 			baseName := filepath.Base(file)
-			remoteFile := path.Join("tetrate-istio-distro-build",
+			remoteFile := path.Join("tetrate-istio-subscription-build",
 				remoteProxyDir, strings.Replace(baseName, ".wasm", "-"+istioProxyRef+".wasm", 1))
 			if strings.HasSuffix(file, ".compiled.wasm") {
-				remoteFile = path.Join("tetrate-istio-distro-build",
+				remoteFile = path.Join("tetrate-istio-subscription-build",
 					remoteProxyDir, strings.Replace(baseName, ".compiled.wasm", "-"+istioProxyRef+".compiled.wasm", 1))
 			}
 

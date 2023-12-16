@@ -14,7 +14,7 @@ type Output struct {
 	Dir    string
 }
 
-func NewProxyBuilder(target, overrideEnvoy, patchSource, remoteCache string, fipsBuild, wasm bool, output *Output) (*ProxyBuilder, error) {
+func NewProxyBuilder(target, overrideEnvoy, patchSource, patchSourceName, remoteCache string, fipsBuild, wasm bool, output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 
 	patchGetterSource := patch.Source(patchSource)
@@ -32,23 +32,25 @@ func NewProxyBuilder(target, overrideEnvoy, patchSource, remoteCache string, fip
 		}
 	}
 	return &ProxyBuilder{
-		target:      arg.Version(target),
-		envoy:       arg.Version(overrideEnvoy),
-		patchGetter: patchGetter,
-		fipsBuild:   fipsBuild,
-		wasm:        wasm,
-		output:      output,
-		remoteCache: remoteCache,
+		target:        arg.Version(target),
+		envoy:         arg.Version(overrideEnvoy),
+		patchGetter:   patchGetter,
+		fipsBuild:     fipsBuild,
+		wasm:          wasm,
+		output:        output,
+		remoteCache:   remoteCache,
+		patchInfoName: patchSourceName,
 	}, nil
 }
 
 type ProxyBuilder struct {
-	target      arg.Version
-	envoy       arg.Version
-	patchGetter patch.Getter
-	fipsBuild   bool
-	wasm        bool
-	remoteCache string
+	target        arg.Version
+	envoy         arg.Version
+	patchGetter   patch.Getter
+	fipsBuild     bool
+	wasm          bool
+	remoteCache   string
+	patchInfoName string
 
 	// these are for output
 	output *Output
@@ -58,13 +60,14 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Istio:       b.target,
-			Version:     b.target.Version(),
-			Envoy:       b.envoy,
-			Patch:       b.patchGetter,
-			FIPSBuild:   b.fipsBuild,
-			Wasm:        b.wasm,
-			remoteCache: b.remoteCache,
+			Istio:         b.target,
+			Version:       b.target.Version(),
+			Envoy:         b.envoy,
+			Patch:         b.patchGetter,
+			FIPSBuild:     b.fipsBuild,
+			Wasm:          b.wasm,
+			remoteCache:   b.remoteCache,
+			PatchInfoName: b.patchInfoName,
 		}
 		return builder.Info(ctx)
 	}
@@ -76,14 +79,15 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Istio:       b.target,
-			Version:     b.target.Version(),
-			Envoy:       b.envoy,
-			Patch:       b.patchGetter,
-			FIPSBuild:   b.fipsBuild,
-			Wasm:        b.wasm,
-			output:      b.output,
-			remoteCache: b.remoteCache,
+			Istio:         b.target,
+			Version:       b.target.Version(),
+			Envoy:         b.envoy,
+			Patch:         b.patchGetter,
+			FIPSBuild:     b.fipsBuild,
+			Wasm:          b.wasm,
+			output:        b.output,
+			remoteCache:   b.remoteCache,
+			PatchInfoName: b.patchInfoName,
 		}
 		return builder.Output(ctx)
 	}
@@ -95,14 +99,15 @@ func (b *ProxyBuilder) Release(ctx context.Context) error {
 	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Istio:       b.target,
-			Version:     b.target.Version(),
-			Envoy:       b.envoy,
-			Patch:       b.patchGetter,
-			FIPSBuild:   b.fipsBuild,
-			Wasm:        b.wasm,
-			output:      b.output,
-			remoteCache: b.remoteCache,
+			Istio:         b.target,
+			Version:       b.target.Version(),
+			Envoy:         b.envoy,
+			Patch:         b.patchGetter,
+			FIPSBuild:     b.fipsBuild,
+			Wasm:          b.wasm,
+			output:        b.output,
+			remoteCache:   b.remoteCache,
+			PatchInfoName: b.patchInfoName,
 		}
 		return builder.Release(ctx)
 	}
@@ -114,13 +119,14 @@ func (b *ProxyBuilder) Build(ctx context.Context) error {
 	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Istio:       b.target,
-			Version:     b.target.Version(),
-			Envoy:       b.envoy,
-			Patch:       b.patchGetter,
-			FIPSBuild:   b.fipsBuild,
-			Wasm:        b.wasm,
-			remoteCache: b.remoteCache,
+			Istio:         b.target,
+			Version:       b.target.Version(),
+			Envoy:         b.envoy,
+			Patch:         b.patchGetter,
+			FIPSBuild:     b.fipsBuild,
+			Wasm:          b.wasm,
+			remoteCache:   b.remoteCache,
+			PatchInfoName: b.patchInfoName,
 		}
 		return builder.Build(ctx)
 	}

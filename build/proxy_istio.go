@@ -18,12 +18,13 @@ import (
 )
 
 type IstioProxyBuilder struct {
-	Istio     arg.Version
-	Version   string
-	Envoy     arg.Version
-	Patch     patch.Getter
-	FIPSBuild bool
-	Wasm      bool
+	Istio         arg.Version
+	Version       string
+	Envoy         arg.Version
+	Patch         patch.Getter
+	FIPSBuild     bool
+	Wasm          bool
+	PatchInfoName string
 
 	remoteCache string
 	output      *Output
@@ -240,9 +241,14 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 	if b.FIPSBuild {
 		suffix = "-fips"
 	}
+
+	if len(b.PatchInfoName) == 0 {
+		b.PatchInfoName = "envoy"
+	}
+
 	// Patch envoy
 	err = patch.Apply(ctx, patch.Info{
-		Name: "envoy",
+		Name: b.PatchInfoName,
 		// Always trim -dev. But this probably misleading since the patch will be valid for envoyVersion.patch+1.
 		// For example: A patch that valid 1.24.10-dev, probably invalid for 1.24.10.
 		Ref:    strings.TrimSuffix(envoyVersion, "-dev"),
@@ -260,7 +266,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 			return err
 		}
 		if err = patch.Apply(ctx, patch.Info{
-			Name: "envoy",
+			Name: b.PatchInfoName,
 			// Always trim -dev. But this probably misleading since the patch will be valid for envoyVersion.patch+1.
 			// For example: A patch that valid 1.24.10-dev, probably invalid for 1.24.10.
 			Ref: strings.TrimSuffix(envoyVersion, "-dev"),

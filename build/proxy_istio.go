@@ -25,6 +25,7 @@ type IstioProxyBuilder struct {
 	FIPSBuild     bool
 	Wasm          bool
 	PatchInfoName string
+	Gperftools    bool
 
 	remoteCache string
 	output      *Output
@@ -288,6 +289,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		EnvoyRepo:    b.Envoy.Name(),
 		IstioVersion: b.Version,
 		FIPSBuild:    b.FIPSBuild,
+		Gperftools:   b.Gperftools,
 		Wasm:         b.Wasm,
 		RemoteCache:  b.remoteCache,
 	}); err != nil {

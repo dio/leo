@@ -14,7 +14,7 @@ type Output struct {
 	Dir    string
 }
 
-func NewProxyBuilder(target, overrideEnvoy, patchSource, patchSourceName, remoteCache string, fipsBuild, wasm bool, output *Output) (*ProxyBuilder, error) {
+func NewProxyBuilder(target, overrideEnvoy, patchSource, patchSourceName, remoteCache string, fipsBuild, wasm, gperftools bool, output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 
 	patchGetterSource := patch.Source(patchSource)
@@ -36,6 +36,7 @@ func NewProxyBuilder(target, overrideEnvoy, patchSource, patchSourceName, remote
 		envoy:         arg.Version(overrideEnvoy),
 		patchGetter:   patchGetter,
 		fipsBuild:     fipsBuild,
+		gperftools:    gperftools,
 		wasm:          wasm,
 		output:        output,
 		remoteCache:   remoteCache,
@@ -49,6 +50,7 @@ type ProxyBuilder struct {
 	patchGetter   patch.Getter
 	fipsBuild     bool
 	wasm          bool
+	gperftools    bool
 	remoteCache   string
 	patchInfoName string
 
@@ -65,6 +67,7 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 			Envoy:         b.envoy,
 			Patch:         b.patchGetter,
 			FIPSBuild:     b.fipsBuild,
+			Gperftools:    b.gperftools,
 			Wasm:          b.wasm,
 			remoteCache:   b.remoteCache,
 			PatchInfoName: b.patchInfoName,
@@ -85,6 +88,7 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 			Patch:         b.patchGetter,
 			FIPSBuild:     b.fipsBuild,
 			Wasm:          b.wasm,
+			Gperftools:    b.gperftools,
 			output:        b.output,
 			remoteCache:   b.remoteCache,
 			PatchInfoName: b.patchInfoName,
@@ -104,6 +108,7 @@ func (b *ProxyBuilder) Release(ctx context.Context) error {
 			Envoy:         b.envoy,
 			Patch:         b.patchGetter,
 			FIPSBuild:     b.fipsBuild,
+			Gperftools:    b.gperftools,
 			Wasm:          b.wasm,
 			output:        b.output,
 			remoteCache:   b.remoteCache,
@@ -124,6 +129,7 @@ func (b *ProxyBuilder) Build(ctx context.Context) error {
 			Envoy:         b.envoy,
 			Patch:         b.patchGetter,
 			FIPSBuild:     b.fipsBuild,
+			Gperftools:    b.gperftools,
 			Wasm:          b.wasm,
 			remoteCache:   b.remoteCache,
 			PatchInfoName: b.patchInfoName,

@@ -136,7 +136,7 @@ RUN apt-get -q update && apt-get install -yqq --no-install-recommends linux-libc
 
 FROM $IMG
 COPY --from=linux_headers /usr/include/linux/tcp.h /usr/include/linux/tcp.h
-RUN su-exec 0:0 apt-get -q update && apt-get install -yqq --no-install-recommends rsync
+RUN su-exec 0:0 apt-get --allow-unauthenticated -q update && apt-get install --allow-unauthenticated -yqq --no-install-recommends rsync
 ENV BAZEL_BUILD_ARGS="`+remoteCache+`"`),
 		os.ModePerm); err != nil {
 		return err

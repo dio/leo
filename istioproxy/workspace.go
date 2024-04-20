@@ -137,8 +137,8 @@ RUN curl -sSLO https://github.com/Kitware/CMake/releases/download/v3.29.2/cmake-
 FROM ubuntu:20.04 AS linux_headers_arm64
 RUN apt-get -q update && apt-get install -yqq --no-install-recommends curl ca-certificates
 RUN curl -sSLO https://github.com/Kitware/CMake/releases/download/v3.29.2/cmake-3.29.2-linux-aarch64.tar.gz && \
-  tar -xzf cmake-3.29.2-linux-aarch64_64.tar.gz -C /usr/ && \
-  rm cmake-3.29.2-linux-aarch64_64.tar.gz
+  tar -xzf cmake-3.29.2-linux-aarch64.tar.gz -C /usr/ && \
+  rm cmake-3.29.2-linux-aarch64.tar.gz
 
 FROM linux_headers_${TARGETARCH} AS linux_headers
 RUN apt-get -q update && apt-get install -yqq --no-install-recommends linux-libc-dev

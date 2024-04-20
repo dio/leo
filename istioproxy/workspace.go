@@ -136,8 +136,15 @@ RUN apt-get -q update && apt-get install -yqq --no-install-recommends linux-libc
 
 FROM $IMG
 COPY --from=linux_headers /usr/include/linux/tcp.h /usr/include/linux/tcp.h
+# Get cmake from kitware
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
+RUN echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ focal main' |  tee /etc/apt/sources.list.d/kitware.list >/dev/null
+
 RUN su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true -q update && \
   su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true install -yqq --no-install-recommends rsync cmake
+
+RUN apt-get download cmake && dpkg -i --force-all --ignore-depends=libc cmake*.deb
+
 ENV BAZEL_BUILD_ARGS="`+remoteCache+`"`),
 		os.ModePerm); err != nil {
 		return err

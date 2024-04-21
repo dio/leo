@@ -129,15 +129,30 @@ func PrepareBuilder(proxyDir, remote string) error {
 ARG IMG
 
 FROM ubuntu:20.04 AS linux_headers_amd64
+RUN apt-get -q update && apt-get install -yqq --no-install-recommends curl ca-certificates
+RUN curl -sSLO https://github.com/Kitware/CMake/releases/download/v3.29.2/cmake-3.29.2-linux-x86_64.tar.gz && \
+  tar -xzf cmake-3.29.2-linux-x86_64.tar.gz -C /usr/  --strip-components=1 && \
+  rm cmake-3.29.2-linux-x86_64.tar.gz
+
 FROM ubuntu:20.04 AS linux_headers_arm64
+RUN apt-get -q update && apt-get install -yqq --no-install-recommends curl ca-certificates
+RUN curl -sSLO https://github.com/Kitware/CMake/releases/download/v3.29.2/cmake-3.29.2-linux-aarch64.tar.gz && \
+  tar -xzvf cmake-3.29.2-linux-aarch64.tar.gz -C /usr/ --strip-components=1 && \
+  rm cmake-3.29.2-linux-aarch64.tar.gz
+
 
 FROM linux_headers_${TARGETARCH} AS linux_headers
 RUN apt-get -q update && apt-get install -yqq --no-install-recommends linux-libc-dev
 
 FROM $IMG
 COPY --from=linux_headers /usr/include/linux/tcp.h /usr/include/linux/tcp.h
+# Get cmake from kitware
+COPY --from=linux_headers /usr/bin/cmake /usr/bin/cmake
+COPY --from=linux_headers /usr/share/cmake-3.29 /usr/share/cmake-3.29
+
 RUN su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true -q update && \
   su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true install -yqq --no-install-recommends rsync cmake
+
 ENV BAZEL_BUILD_ARGS="`+remoteCache+`"`),
 		os.ModePerm); err != nil {
 		return err

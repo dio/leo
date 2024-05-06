@@ -141,7 +141,7 @@ func Apply(ctx context.Context, info Info, patchGetter Getter, dst string) error
 	if err != nil {
 		return err
 	}
-	fmt.Println("patching", info.Name, "with", patchFile.Name())
+	fmt.Fprintln(os.Stderr, "patching", info.Name, "with", patchFile.Name())
 	return sh.Run(ctx, "patch", "-p1", "-i", patchFile.Name(), "-d", dst)
 }
 

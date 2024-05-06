@@ -246,9 +246,11 @@ func buildConfigFlags(proxyDir string, gperftools bool) (string, error) {
 
 	var setHostActionEnvCompiler string
 
-	// When host action env for compiler is reset, we need to set it again.
-	if strings.Contains(text, configResetHostActionEnvCC) && strings.Contains(text, configResetHostActionEnvCXX) {
-		setHostActionEnvCompiler = " --action_env=CC=clang --host_action_env=CXX=clang++ "
+	// On arm64, when host action env for compiler is reset, we need to set it again.
+	if runtime.GOARCH == "arm64" &&
+		strings.Contains(text, configResetHostActionEnvCC) &&
+		strings.Contains(text, configResetHostActionEnvCXX) {
+		setHostActionEnvCompiler = " --host_action_env=CC=/usr/lib/llvm/bin/clang --host_action_env=CXX=/usr/lib/llvm/bin/clang++ "
 	}
 
 	// When "configLibcxx" is enabled in proxy's .bazelrc, we don't need to specify it again.

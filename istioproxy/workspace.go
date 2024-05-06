@@ -226,7 +226,11 @@ func AddMakeTargets(opts TargetOptions) error {
 	return nil
 }
 
-const configLibcxx = "build --config=libc++"
+const (
+	configLibcxx                = "build --config=libc++"
+	configResetHostActionEnvCC  = "build:clang --host_action_env=CC="
+	configResetHostActionEnvCXX = "build:clang --host_action_env=CXX="
+)
 
 func buildConfigFlags(proxyDir string, gperftools bool) (string, error) {
 	var gperftoolsFlag string
@@ -239,14 +243,24 @@ func buildConfigFlags(proxyDir string, gperftools bool) (string, error) {
 		return "", err
 	}
 	text := string(data)
+
+	var setHostActionEnvCompiler string
+
+	// On arm64, when host action env for compiler is reset, we need to set it again.
+	if runtime.GOARCH == "arm64" &&
+		strings.Contains(text, configResetHostActionEnvCC) &&
+		strings.Contains(text, configResetHostActionEnvCXX) {
+		setHostActionEnvCompiler = " --host_action_env=CC=/usr/lib/llvm/bin/clang --host_action_env=CXX=/usr/lib/llvm/bin/clang++ "
+	}
+
 	// When "configLibcxx" is enabled in proxy's .bazelrc, we don't need to specify it again.
 	// This to remedy: WARNING: The following configs were expanded more than once: [libc++, clang]. For repeatable flags, repeats are counted twice and may lead to unexpected behavior.
 	if strings.Contains(text, configLibcxx) {
-		return "--config=release" + gperftoolsFlag, nil
+		return "--config=release" + gperftoolsFlag + setHostActionEnvCompiler, nil
 	}
 
 	// For older version, we need to explicitly enable --config=libc++.
-	return "--config=release --config=libc++" + gperftoolsFlag, nil
+	return "--config=release --config=libc++" + gperftoolsFlag + setHostActionEnvCompiler, nil
 }
 
 func IstioProxyCentos7Target(opts TargetOptions) (string, error) {

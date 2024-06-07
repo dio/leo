@@ -44,26 +44,20 @@ func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
 	}
 	b.Version = istioRef
 
-	var istioProxyRef string
-	var istioProxyRepo string
-
 	// When IstioProxy is not set, we need to resolve the proxy from the istio.deps.
 	if b.IstioProxy.IsEmpty() {
 		deps, err := istio.GetDeps(ctx, istioRepo, b.Version)
 		if err != nil {
 			return "", "", err
 		}
-		istioProxyRef = deps.Get("proxy").SHA
-		b.IstioProxy = arg.Version(fmt.Sprintf("istio/proxy@%s", istioProxyRef))
+		b.IstioProxy = arg.Version(fmt.Sprintf("istio/proxy@%s", deps.Get("proxy").SHA))
 	} else {
-		istioProxyRef = b.IstioProxy.Version()
-		istioProxyRepo = b.IstioProxy.Name()
-		b.IstioProxy = arg.Version(fmt.Sprintf("%s@%s", istioProxyRepo, istioProxyRef))
+		b.IstioProxy = arg.Version(fmt.Sprintf("%s@%s", b.IstioProxy.Name(), b.IstioProxy.Version()))
 	}
 
 	// When "envoy" is empty, we need to resolve our envoy from the istio.deps.
 	if b.Envoy.IsEmpty() {
-		istioProxyWorkspace, err := github.GetRaw(ctx, istioProxyRepo, "WORKSPACE", istioProxyRef)
+		istioProxyWorkspace, err := github.GetRaw(ctx, b.IstioProxy.Name(), "WORKSPACE", b.IstioProxy.Version())
 		if err != nil {
 			return "", "", err
 		}
@@ -84,7 +78,7 @@ func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	return istioProxyRef, envoyVersion, err
+	return b.IstioProxy.Version(), envoyVersion, err
 }
 
 func (b *IstioProxyBuilder) Info(ctx context.Context) error {

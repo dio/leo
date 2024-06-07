@@ -19,6 +19,7 @@ import (
 
 type IstioProxyBuilder struct {
 	Istio         arg.Version
+	IstioProxy    arg.Version
 	Version       string
 	Envoy         arg.Version
 	Patch         patch.Getter
@@ -43,15 +44,20 @@ func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
 	}
 	b.Version = istioRef
 
-	deps, err := istio.GetDeps(ctx, istioRepo, b.Version)
-	if err != nil {
-		return "", "", err
+	// When IstioProxy is not set, we need to resolve the proxy from the istio.deps.
+	if b.IstioProxy.IsEmpty() {
+		deps, err := istio.GetDeps(ctx, istioRepo, b.Version)
+		if err != nil {
+			return "", "", err
+		}
+		b.IstioProxy = arg.Version(fmt.Sprintf("istio/proxy@%s", deps.Get("proxy").SHA))
+	} else {
+		b.IstioProxy = arg.Version(fmt.Sprintf("%s@%s", b.IstioProxy.Name(), b.IstioProxy.Version()))
 	}
-	istioProxyRef := deps.Get("proxy").SHA
 
 	// When "envoy" is empty, we need to resolve our envoy from the istio.deps.
 	if b.Envoy.IsEmpty() {
-		istioProxyWorkspace, err := github.GetRaw(ctx, "istio/proxy", "WORKSPACE", istioProxyRef)
+		istioProxyWorkspace, err := github.GetRaw(ctx, b.IstioProxy.Name(), "WORKSPACE", b.IstioProxy.Version())
 		if err != nil {
 			return "", "", err
 		}
@@ -72,7 +78,7 @@ func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	return istioProxyRef, envoyVersion, err
+	return b.IstioProxy.Version(), envoyVersion, err
 }
 
 func (b *IstioProxyBuilder) Info(ctx context.Context) error {
@@ -81,13 +87,17 @@ func (b *IstioProxyBuilder) Info(ctx context.Context) error {
 		return err
 	}
 
+	if b.IstioProxy == "" {
+		b.IstioProxy = arg.Version(fmt.Sprintf("istio/proxy@%s", istioProxyRef))
+	}
+
 	fmt.Fprintf(os.Stderr, `build info:
   istio: %s
-  workspace: istio/proxy@%s
+  workspace: %s
   envoy: %s
   envoyVersion: %s
   fips: %v
-`, b.Istio, istioProxyRef, b.Envoy, envoyVersion, b.FIPSBuild)
+`, b.Istio, b.IstioProxy, b.Envoy, envoyVersion, b.FIPSBuild)
 	return nil
 }
 
@@ -200,9 +210,9 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 
 	notes := fmt.Sprintf(`
 - https://github.com/%s/commits/%s
-- https://github.com/istio/proxy/commits/%s
 - https://github.com/%s/commits/%s
-`, b.Istio.Repo(), b.Version[0:7], istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
+- https://github.com/%s/commits/%s
+`, b.Istio.Repo(), b.Version[0:7], b.IstioProxy.Name(), b.IstioProxy.Version()[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
 
 	if err := sh.RunV(ctx, "gh", "release", "view", tag, "-R", b.output.Repo); err != nil {
 		if err := sh.RunV(ctx, "gh", append([]string{"release", "create", tag, "-n", notes, "-t", title, "-R", b.output.Repo}, files...)...); err == nil {
@@ -222,13 +232,13 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 
 	fmt.Fprintf(os.Stderr, `build info:
   istio: %s
-  workspace: istio/proxy@%s
+  workspace: %s
   envoy: %s
   envoyVersion: %s
   fips: %v
-`, b.Istio, istioProxyRef, b.Envoy, envoyVersion, b.FIPSBuild)
+`, b.Istio, b.IstioProxy, b.Envoy, envoyVersion, b.FIPSBuild)
 
-	istioProxyDir, err := utils.GetTarballAndExtract(ctx, "istio/proxy", istioProxyRef, "work")
+	istioProxyDir, err := utils.GetTarballAndExtract(ctx, b.IstioProxy.Name(), istioProxyRef, "work")
 	if err != nil {
 		return err
 	}

@@ -14,7 +14,7 @@ type Output struct {
 	Dir    string
 }
 
-func NewProxyBuilder(target, overrideEnvoy, patchSource, patchSourceName, remoteCache string, fipsBuild, wasm, gperftools bool, output *Output) (*ProxyBuilder, error) {
+func NewProxyBuilder(target, overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache string, fipsBuild, wasm, gperftools bool, output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 
 	patchGetterSource := patch.Source(patchSource)
@@ -34,6 +34,7 @@ func NewProxyBuilder(target, overrideEnvoy, patchSource, patchSourceName, remote
 	return &ProxyBuilder{
 		target:        arg.Version(target),
 		envoy:         arg.Version(overrideEnvoy),
+		istioProxy:    arg.Version(overrideIstioProxy),
 		patchGetter:   patchGetter,
 		fipsBuild:     fipsBuild,
 		gperftools:    gperftools,
@@ -47,6 +48,7 @@ func NewProxyBuilder(target, overrideEnvoy, patchSource, patchSourceName, remote
 type ProxyBuilder struct {
 	target        arg.Version
 	envoy         arg.Version
+	istioProxy    arg.Version
 	patchGetter   patch.Getter
 	fipsBuild     bool
 	wasm          bool
@@ -65,6 +67,7 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 			Istio:         b.target,
 			Version:       b.target.Version(),
 			Envoy:         b.envoy,
+			IstioProxy:    b.istioProxy,
 			Patch:         b.patchGetter,
 			FIPSBuild:     b.fipsBuild,
 			Gperftools:    b.gperftools,
@@ -85,6 +88,7 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 			Istio:         b.target,
 			Version:       b.target.Version(),
 			Envoy:         b.envoy,
+			IstioProxy:    b.istioProxy,
 			Patch:         b.patchGetter,
 			FIPSBuild:     b.fipsBuild,
 			Wasm:          b.wasm,
@@ -106,6 +110,7 @@ func (b *ProxyBuilder) Release(ctx context.Context) error {
 			Istio:         b.target,
 			Version:       b.target.Version(),
 			Envoy:         b.envoy,
+			IstioProxy:    b.istioProxy,
 			Patch:         b.patchGetter,
 			FIPSBuild:     b.fipsBuild,
 			Gperftools:    b.gperftools,
@@ -127,6 +132,7 @@ func (b *ProxyBuilder) Build(ctx context.Context) error {
 			Istio:         b.target,
 			Version:       b.target.Version(),
 			Envoy:         b.envoy,
+			IstioProxy:    b.istioProxy,
 			Patch:         b.patchGetter,
 			FIPSBuild:     b.fipsBuild,
 			Gperftools:    b.gperftools,

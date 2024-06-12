@@ -14,7 +14,8 @@ type Output struct {
 	Dir    string
 }
 
-func NewProxyBuilder(target, overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache string, fipsBuild, wasm, gperftools bool, output *Output) (*ProxyBuilder, error) {
+func NewProxyBuilder(target, overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix string,
+	fipsBuild, wasm, gperftools bool, output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 
 	patchGetterSource := patch.Source(patchSource)
@@ -42,6 +43,7 @@ func NewProxyBuilder(target, overrideIstioProxy, overrideEnvoy, patchSource, pat
 		output:        output,
 		remoteCache:   remoteCache,
 		patchInfoName: patchSourceName,
+		patchSuffix:   patchSuffix,
 	}, nil
 }
 
@@ -55,6 +57,7 @@ type ProxyBuilder struct {
 	gperftools    bool
 	remoteCache   string
 	patchInfoName string
+	patchSuffix   string
 
 	// these are for output
 	output *Output
@@ -74,6 +77,7 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 			Wasm:          b.wasm,
 			remoteCache:   b.remoteCache,
 			PatchInfoName: b.patchInfoName,
+			PatchSuffix:   b.patchSuffix,
 		}
 		return builder.Info(ctx)
 	}
@@ -96,6 +100,7 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 			output:        b.output,
 			remoteCache:   b.remoteCache,
 			PatchInfoName: b.patchInfoName,
+			PatchSuffix:   b.patchSuffix,
 		}
 		return builder.Output(ctx)
 	}
@@ -118,6 +123,7 @@ func (b *ProxyBuilder) Release(ctx context.Context) error {
 			output:        b.output,
 			remoteCache:   b.remoteCache,
 			PatchInfoName: b.patchInfoName,
+			PatchSuffix:   b.patchSuffix,
 		}
 		return builder.Release(ctx)
 	}
@@ -139,6 +145,7 @@ func (b *ProxyBuilder) Build(ctx context.Context) error {
 			Wasm:          b.wasm,
 			remoteCache:   b.remoteCache,
 			PatchInfoName: b.patchInfoName,
+			PatchSuffix:   b.patchSuffix,
 		}
 		return builder.Build(ctx)
 	}

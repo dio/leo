@@ -26,6 +26,7 @@ type IstioProxyBuilder struct {
 	FIPSBuild     bool
 	Wasm          bool
 	PatchInfoName string
+	PatchSuffix   string
 	Gperftools    bool
 
 	remoteCache string
@@ -169,9 +170,9 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 	if b.Envoy.Name() != "envoyproxy/envoy" {
 		remoteProxyDir += "-" + arg.Repo(b.Envoy.Name()).Owner()
 	}
-	suffix := ".tar.gz"
+	suffix := b.PatchSuffix + ".tar.gz"
 	if b.output.Arch != "amd64" {
-		suffix = "-" + b.output.Arch + ".tar.gz"
+		suffix = "-" + b.output.Arch + b.PatchSuffix + ".tar.gz"
 	}
 
 	for _, file := range files {

@@ -15,7 +15,7 @@ type Output struct {
 }
 
 func NewProxyBuilder(target, overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix string,
-	fipsBuild, wasm, gperftools bool, output *Output) (*ProxyBuilder, error) {
+	fipsBuild, wasm, gperftools, dynamicModulesBuild bool, output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 
 	patchGetterSource := patch.Source(patchSource)
@@ -33,31 +33,33 @@ func NewProxyBuilder(target, overrideIstioProxy, overrideEnvoy, patchSource, pat
 		}
 	}
 	return &ProxyBuilder{
-		target:        arg.Version(target),
-		envoy:         arg.Version(overrideEnvoy),
-		istioProxy:    arg.Version(overrideIstioProxy),
-		patchGetter:   patchGetter,
-		fipsBuild:     fipsBuild,
-		gperftools:    gperftools,
-		wasm:          wasm,
-		output:        output,
-		remoteCache:   remoteCache,
-		patchInfoName: patchSourceName,
-		patchSuffix:   patchSuffix,
+		target:              arg.Version(target),
+		envoy:               arg.Version(overrideEnvoy),
+		istioProxy:          arg.Version(overrideIstioProxy),
+		patchGetter:         patchGetter,
+		fipsBuild:           fipsBuild,
+		dynamicModulesBuild: dynamicModulesBuild,
+		gperftools:          gperftools,
+		wasm:                wasm,
+		output:              output,
+		remoteCache:         remoteCache,
+		patchInfoName:       patchSourceName,
+		patchSuffix:         patchSuffix,
 	}, nil
 }
 
 type ProxyBuilder struct {
-	target        arg.Version
-	envoy         arg.Version
-	istioProxy    arg.Version
-	patchGetter   patch.Getter
-	fipsBuild     bool
-	wasm          bool
-	gperftools    bool
-	remoteCache   string
-	patchInfoName string
-	patchSuffix   string
+	target              arg.Version
+	envoy               arg.Version
+	istioProxy          arg.Version
+	patchGetter         patch.Getter
+	fipsBuild           bool
+	dynamicModulesBuild bool
+	wasm                bool
+	gperftools          bool
+	remoteCache         string
+	patchInfoName       string
+	patchSuffix         string
 
 	// these are for output
 	output *Output
@@ -67,17 +69,18 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Istio:         b.target,
-			Version:       b.target.Version(),
-			Envoy:         b.envoy,
-			IstioProxy:    b.istioProxy,
-			Patch:         b.patchGetter,
-			FIPSBuild:     b.fipsBuild,
-			Gperftools:    b.gperftools,
-			Wasm:          b.wasm,
-			remoteCache:   b.remoteCache,
-			PatchInfoName: b.patchInfoName,
-			PatchSuffix:   b.patchSuffix,
+			Istio:               b.target,
+			Version:             b.target.Version(),
+			Envoy:               b.envoy,
+			IstioProxy:          b.istioProxy,
+			Patch:               b.patchGetter,
+			FIPSBuild:           b.fipsBuild,
+			DynamicModulesBuild: b.dynamicModulesBuild,
+			Gperftools:          b.gperftools,
+			Wasm:                b.wasm,
+			remoteCache:         b.remoteCache,
+			PatchInfoName:       b.patchInfoName,
+			PatchSuffix:         b.patchSuffix,
 		}
 		return builder.Info(ctx)
 	}
@@ -89,18 +92,19 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Istio:         b.target,
-			Version:       b.target.Version(),
-			Envoy:         b.envoy,
-			IstioProxy:    b.istioProxy,
-			Patch:         b.patchGetter,
-			FIPSBuild:     b.fipsBuild,
-			Wasm:          b.wasm,
-			Gperftools:    b.gperftools,
-			output:        b.output,
-			remoteCache:   b.remoteCache,
-			PatchInfoName: b.patchInfoName,
-			PatchSuffix:   b.patchSuffix,
+			Istio:               b.target,
+			Version:             b.target.Version(),
+			Envoy:               b.envoy,
+			IstioProxy:          b.istioProxy,
+			Patch:               b.patchGetter,
+			FIPSBuild:           b.fipsBuild,
+			DynamicModulesBuild: b.dynamicModulesBuild,
+			Wasm:                b.wasm,
+			Gperftools:          b.gperftools,
+			output:              b.output,
+			remoteCache:         b.remoteCache,
+			PatchInfoName:       b.patchInfoName,
+			PatchSuffix:         b.patchSuffix,
 		}
 		return builder.Output(ctx)
 	}
@@ -112,18 +116,19 @@ func (b *ProxyBuilder) Release(ctx context.Context) error {
 	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Istio:         b.target,
-			Version:       b.target.Version(),
-			Envoy:         b.envoy,
-			IstioProxy:    b.istioProxy,
-			Patch:         b.patchGetter,
-			FIPSBuild:     b.fipsBuild,
-			Gperftools:    b.gperftools,
-			Wasm:          b.wasm,
-			output:        b.output,
-			remoteCache:   b.remoteCache,
-			PatchInfoName: b.patchInfoName,
-			PatchSuffix:   b.patchSuffix,
+			Istio:               b.target,
+			Version:             b.target.Version(),
+			Envoy:               b.envoy,
+			IstioProxy:          b.istioProxy,
+			Patch:               b.patchGetter,
+			FIPSBuild:           b.fipsBuild,
+			DynamicModulesBuild: b.dynamicModulesBuild,
+			Gperftools:          b.gperftools,
+			Wasm:                b.wasm,
+			output:              b.output,
+			remoteCache:         b.remoteCache,
+			PatchInfoName:       b.patchInfoName,
+			PatchSuffix:         b.patchSuffix,
 		}
 		return builder.Release(ctx)
 	}
@@ -135,17 +140,18 @@ func (b *ProxyBuilder) Build(ctx context.Context) error {
 	switch b.target.Repo().Name() {
 	case "istio":
 		builder := &IstioProxyBuilder{
-			Istio:         b.target,
-			Version:       b.target.Version(),
-			Envoy:         b.envoy,
-			IstioProxy:    b.istioProxy,
-			Patch:         b.patchGetter,
-			FIPSBuild:     b.fipsBuild,
-			Gperftools:    b.gperftools,
-			Wasm:          b.wasm,
-			remoteCache:   b.remoteCache,
-			PatchInfoName: b.patchInfoName,
-			PatchSuffix:   b.patchSuffix,
+			Istio:               b.target,
+			Version:             b.target.Version(),
+			Envoy:               b.envoy,
+			IstioProxy:          b.istioProxy,
+			Patch:               b.patchGetter,
+			FIPSBuild:           b.fipsBuild,
+			DynamicModulesBuild: b.dynamicModulesBuild,
+			Gperftools:          b.gperftools,
+			Wasm:                b.wasm,
+			remoteCache:         b.remoteCache,
+			PatchInfoName:       b.patchInfoName,
+			PatchSuffix:         b.patchSuffix,
 		}
 		return builder.Build(ctx)
 	}

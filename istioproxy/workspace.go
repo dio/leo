@@ -105,17 +105,18 @@ func WriteWorkspaceStatus(proxyDir, envoyName, envoySHA string) error {
 }
 
 type TargetOptions struct {
-	ProxyDir     string
-	ProxySHA     string
-	EnvoyDir     string
-	EnvoySHA     string
-	IstioVersion string
-	EnvoyVersion string
-	RemoteCache  string // Remote cache values: us-central1 or asia-south2.
-	FIPSBuild    bool
-	Gperftools   bool
-	Wasm         bool
-	EnvoyRepo    string
+	ProxyDir            string
+	ProxySHA            string
+	EnvoyDir            string
+	EnvoySHA            string
+	IstioVersion        string
+	EnvoyVersion        string
+	RemoteCache         string // Remote cache values: us-central1 or asia-south2.
+	FIPSBuild           bool
+	DynamicModulesBuild bool
+	Gperftools          bool
+	Wasm                bool
+	EnvoyRepo           string
 }
 
 func PrepareBuilder(proxyDir, remote string) error {
@@ -291,8 +292,11 @@ func IstioProxyCentos7Target(opts TargetOptions) (string, error) {
 	}
 
 	var targzSuffix string
+	if opts.DynamicModulesBuild {
+		targzSuffix = "-dynamic-modules"
+	}
 	if opts.FIPSBuild {
-		targzSuffix = "-fips"
+		targzSuffix += "-fips"
 	}
 	targz := "istio-proxy-centos7" + targzSuffix + "-" + runtime.GOARCH + ".tar.gz"
 	content := `
@@ -354,8 +358,11 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 	}
 
 	var targzSuffix string
+	if opts.DynamicModulesBuild {
+		targzSuffix = "-dynamic-modules"
+	}
 	if opts.FIPSBuild {
-		targzSuffix = "-fips"
+		targzSuffix += "-fips"
 	}
 	targz := "istio-proxy" + targzSuffix + "-" + runtime.GOARCH + ".tar.gz"
 	content := `
@@ -416,8 +423,11 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 	}
 
 	var targzSuffix string
+	if opts.DynamicModulesBuild {
+		targzSuffix = "-dynamic-modules"
+	}
 	if opts.FIPSBuild {
-		targzSuffix = "-fips"
+		targzSuffix += "-fips"
 	}
 	targz := "envoy" + targzSuffix + "-" + runtime.GOARCH + ".tar.gz"
 	content := `
@@ -476,8 +486,11 @@ func EnvoyCentos7Target(opts TargetOptions) (string, error) {
 	}
 
 	var targzSuffix string
+	if opts.DynamicModulesBuild {
+		targzSuffix = "-dynamic-modules"
+	}
 	if opts.FIPSBuild {
-		targzSuffix = "-fips"
+		targzSuffix += "-fips"
 	}
 	targz := "envoy" + targzSuffix + "-" + runtime.GOARCH + ".tar.gz"
 	content := `
@@ -534,8 +547,11 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 	// TODO(dio): Allow to disable some contrib extenstions, since it is problematic with clang-12.
 
 	var targzSuffix string
+	if opts.DynamicModulesBuild {
+		targzSuffix = "-dynamic-modules"
+	}
 	if opts.FIPSBuild {
-		targzSuffix = "-fips"
+		targzSuffix += "-fips"
 	}
 	targz := "envoy-contrib" + targzSuffix + "-" + runtime.GOARCH + ".tar.gz"
 	content := `

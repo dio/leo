@@ -18,16 +18,18 @@ import (
 )
 
 type IstioProxyBuilder struct {
-	Istio         arg.Version
-	IstioProxy    arg.Version
-	Version       string
-	Envoy         arg.Version
-	Patch         patch.Getter
-	FIPSBuild     bool
-	Wasm          bool
-	PatchInfoName string
-	PatchSuffix   string
-	Gperftools    bool
+	Istio      arg.Version
+	IstioProxy arg.Version
+	Version    string
+	Envoy      arg.Version
+	Patch      patch.Getter
+	FIPSBuild  bool
+	// Currently, we use boolean to determine if we need to build dynamic modules.
+	DynamicModulesBuild bool
+	Wasm                bool
+	PatchInfoName       string
+	PatchSuffix         string
+	Gperftools          bool
 
 	remoteCache string
 	output      *Output
@@ -98,7 +100,8 @@ func (b *IstioProxyBuilder) Info(ctx context.Context) error {
   envoy: %s
   envoyVersion: %s
   fips: %v
-`, b.Istio, b.IstioProxy, b.Envoy, envoyVersion, b.FIPSBuild)
+  dynamic-modules: %v
+`, b.Istio, b.IstioProxy, b.Envoy, envoyVersion, b.FIPSBuild, b.DynamicModulesBuild)
 	return nil
 }
 
@@ -164,6 +167,9 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		return err
 	}
 
+	if b.DynamicModulesBuild {
+		remoteProxyDir = "-dynamic-modules"
+	}
 	if b.FIPSBuild {
 		remoteProxyDir += "-fips"
 	}
@@ -237,7 +243,8 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
   envoy: %s
   envoyVersion: %s
   fips: %v
-`, b.Istio, b.IstioProxy, b.Envoy, envoyVersion, b.FIPSBuild)
+  dynamic-modules: %v
+`, b.Istio, b.IstioProxy, b.Envoy, envoyVersion, b.FIPSBuild, b.DynamicModulesBuild)
 
 	istioProxyDir, err := utils.GetTarballAndExtract(ctx, b.IstioProxy.Name(), istioProxyRef, "work")
 	if err != nil {
@@ -250,6 +257,10 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 	}
 
 	var suffix string
+	if b.DynamicModulesBuild {
+		suffix = "-dynamic-modules"
+	}
+
 	if b.FIPSBuild {
 		suffix = "-fips"
 	}
@@ -292,17 +303,18 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 	}
 
 	if err := istioproxy.AddMakeTargets(istioproxy.TargetOptions{
-		ProxyDir:     istioProxyDir,
-		ProxySHA:     istioProxyRef,
-		EnvoyDir:     envoyDir,
-		EnvoySHA:     b.Envoy.Version(),
-		EnvoyVersion: envoyVersion,
-		EnvoyRepo:    b.Envoy.Name(),
-		IstioVersion: b.Version,
-		FIPSBuild:    b.FIPSBuild,
-		Gperftools:   b.Gperftools,
-		Wasm:         b.Wasm,
-		RemoteCache:  b.remoteCache,
+		ProxyDir:            istioProxyDir,
+		ProxySHA:            istioProxyRef,
+		EnvoyDir:            envoyDir,
+		EnvoySHA:            b.Envoy.Version(),
+		EnvoyVersion:        envoyVersion,
+		EnvoyRepo:           b.Envoy.Name(),
+		IstioVersion:        b.Version,
+		FIPSBuild:           b.FIPSBuild,
+		DynamicModulesBuild: b.DynamicModulesBuild,
+		Gperftools:          b.Gperftools,
+		Wasm:                b.Wasm,
+		RemoteCache:         b.remoteCache,
 	}); err != nil {
 		return err
 	}

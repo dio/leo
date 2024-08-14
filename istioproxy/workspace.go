@@ -611,6 +611,9 @@ func buildWasmTarget(makefileCoreMk, override string) string {
 }
 
 var privateEnvoyDynamicModules = `
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
 git_repository(
     name = "envoy-dynamic-modules",
     branch = "main",

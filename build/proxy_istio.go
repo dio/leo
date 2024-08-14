@@ -168,9 +168,9 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 	}
 
 	if b.DynamicModulesBuild {
-		remoteProxyDir = "-dynamic-modules"
+		remoteProxyDir += "-dynamic-modules"
 		tag = path.Join(tag, "dynamic-modules")
-		title += "+dynamic-modules"
+		title += "-dynamic-modules"
 	}
 	if b.FIPSBuild {
 		remoteProxyDir += "-fips"

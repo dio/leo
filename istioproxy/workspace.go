@@ -292,9 +292,6 @@ func IstioProxyCentos7Target(opts TargetOptions) (string, error) {
 	}
 
 	var targzSuffix string
-	if opts.DynamicModulesBuild {
-		targzSuffix = "-dynamic-modules"
-	}
 	if opts.FIPSBuild {
 		targzSuffix += "-fips"
 	}
@@ -358,9 +355,6 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 	}
 
 	var targzSuffix string
-	if opts.DynamicModulesBuild {
-		targzSuffix = "-dynamic-modules"
-	}
 	if opts.FIPSBuild {
 		targzSuffix += "-fips"
 	}
@@ -423,9 +417,6 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 	}
 
 	var targzSuffix string
-	if opts.DynamicModulesBuild {
-		targzSuffix = "-dynamic-modules"
-	}
 	if opts.FIPSBuild {
 		targzSuffix += "-fips"
 	}
@@ -486,9 +477,6 @@ func EnvoyCentos7Target(opts TargetOptions) (string, error) {
 	}
 
 	var targzSuffix string
-	if opts.DynamicModulesBuild {
-		targzSuffix = "-dynamic-modules"
-	}
 	if opts.FIPSBuild {
 		targzSuffix += "-fips"
 	}
@@ -547,9 +535,6 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 	// TODO(dio): Allow to disable some contrib extenstions, since it is problematic with clang-12.
 
 	var targzSuffix string
-	if opts.DynamicModulesBuild {
-		targzSuffix = "-dynamic-modules"
-	}
 	if opts.FIPSBuild {
 		targzSuffix += "-fips"
 	}

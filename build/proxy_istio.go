@@ -261,6 +261,16 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 	var suffix string
 	if b.DynamicModulesBuild {
 		suffix = "-dynamic-modules"
+		// When we have DynamicModulesBuild, we need to add the dynamic modules to the workspace.
+		// This is a hack since we use istio/proxy workspace vs. envoy workspace.
+		istioProxyWorkspace, err := github.GetRaw(ctx, b.IstioProxy.Name(), "WORKSPACE", b.IstioProxy.Version())
+		if err != nil {
+			return err
+		}
+		modifiedIstioProxyWorkspace := istioproxy.AddDynamicModules(istioProxyWorkspace)
+		if err := os.WriteFile(filepath.Join(istioProxyDir, "WORKSPACE"), []byte(modifiedIstioProxyWorkspace), os.ModePerm); err != nil {
+			return err
+		}
 	}
 
 	if b.FIPSBuild {

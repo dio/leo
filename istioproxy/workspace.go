@@ -609,3 +609,16 @@ func buildWasmTarget(makefileCoreMk, override string) string {
 
 	return target
 }
+
+var privateEnvoyDynamicModules = `
+git_repository(
+    name = "envoy-dynamic-modules",
+    branch = "main",
+    remote = "https://github.com/tetrateio/envoy-dynamic-modules",
+)
+`
+
+// AddDynamicModules adds envoy-dynamic-modules to the WORKSPACE file.
+func AddDynamicModules(workspace string) string {
+	return workspace + privateEnvoyDynamicModules
+}

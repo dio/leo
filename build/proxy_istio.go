@@ -174,7 +174,7 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		}
 		remoteProxyDir += "-dynamic-modules"
 		// For example: envoyproxy/envoy/b4c09ad/tetrateio-dynamic-modules/7b8baff
-		tag = path.Join(tag, "tetrateio-dynamic-modules", parsed.Ref)
+		tag = path.Join(tag, "tetrateio-dynamic-modules", parsed.Ref[0:7])
 		title += "-dynamic-modules"
 	}
 	if b.FIPSBuild {

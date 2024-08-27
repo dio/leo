@@ -168,8 +168,13 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 	}
 
 	if len(b.DynamicModulesBuild) > 0 {
+		parsed, err := parseRepoRef(b.DynamicModulesBuild)
+		if err != nil {
+			return err
+		}
 		remoteProxyDir += "-dynamic-modules"
-		tag = path.Join("dynamic-modules", tag)
+		// For example: envoyproxy/envoy/7b8baff/tetrateio/envoy-dynamic-modules/7b8baff
+		tag = path.Join(tag, parsed.Repo, parsed.Ref)
 		title += "-dynamic-modules"
 	}
 	if b.FIPSBuild {

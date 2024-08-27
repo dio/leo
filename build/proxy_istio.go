@@ -173,8 +173,8 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 			return err
 		}
 		remoteProxyDir += "-dynamic-modules"
-		// For example: envoyproxy/envoy/b4c09ad/tetrateio-dynamic-modules/7b8baff
-		tag = path.Join(tag, "tetrateio-dynamic-modules", parsed.Ref[0:7])
+		// For example: dynamic-modules/b4c09ad/envoyproxy/envoy/7b8baff
+		tag = path.Join("dynamic-modules", parsed.Ref[0:7], tag)
 		title += "-dynamic-modules"
 	}
 	if b.FIPSBuild {
@@ -227,6 +227,8 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 - https://github.com/%s/commits/%s
 - https://github.com/%s/commits/%s
 `, b.Istio.Repo(), b.Version[0:7], b.IstioProxy.Name(), b.IstioProxy.Version()[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
+	fmt.Println(tag)
+	// tag = "test1"
 
 	if err := sh.RunV(ctx, "gh", "release", "view", tag, "-R", b.output.Repo); err != nil {
 		if err := sh.RunV(ctx, "gh", append([]string{"release", "create", tag, "-n", notes, "-t", title, "-R", b.output.Repo}, files...)...); err == nil {

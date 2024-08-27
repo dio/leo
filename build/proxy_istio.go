@@ -227,8 +227,10 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 - https://github.com/%s/commits/%s
 - https://github.com/%s/commits/%s
 `, b.Istio.Repo(), b.Version[0:7], b.IstioProxy.Name(), b.IstioProxy.Version()[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
-	fmt.Println(tag)
-	// tag = "test1"
+
+	if len(b.DynamicModulesBuild) > 0 {
+		notes += fmt.Sprintf("- https://" + strings.Replace(b.DynamicModulesBuild, "@", "/commits/", 1) + "\n")
+	}
 
 	if err := sh.RunV(ctx, "gh", "release", "view", tag, "-R", b.output.Repo); err != nil {
 		if err := sh.RunV(ctx, "gh", append([]string{"release", "create", tag, "-n", notes, "-t", title, "-R", b.output.Repo}, files...)...); err == nil {

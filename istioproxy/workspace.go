@@ -603,7 +603,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
     name = "envoy-dynamic-modules",
-    branch = {{ .ref}},
+    commit = {{ .ref }},
     remote = "https://github.com/{{ .repo }}",
 )
 `

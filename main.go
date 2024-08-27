@@ -244,7 +244,7 @@ func init() {
 	proxyCmd.PersistentFlags().StringVar(&patchSourceName, "patch-source-name", "envoy", "Patch source name. For example: envoy, envoy-no-tls-chacha20-poly1305-sha256")
 	proxyCmd.PersistentFlags().StringVar(&patchSuffix, "patch-suffix", "", "Patch suffix, for example: -tlsnist-preview-") // The "-" prefix is important.
 	proxyCmd.PersistentFlags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
-	proxyCmd.PersistentFlags().StringVar(&dynamicModulesBuild, "dynamic-modules-build", "tetrateio/envoy-dynamic-modules@main", "Dynamic modules build")
+	proxyCmd.PersistentFlags().StringVar(&dynamicModulesBuild, "dynamic-modules-build", "", "Dynamic modules build")
 	proxyCmd.PersistentFlags().BoolVar(&gperftools, "gperftools", false, "Use Gperftools build")
 	proxyCmd.PersistentFlags().BoolVar(&wasm, "wasm", runtime.GOARCH == "amd64", "Build wasm")
 	proxyCmd.PersistentFlags().StringVar(&remoteCache, "remote-cache", "", "Remote cache. E.g. us-central1, asia-south2")

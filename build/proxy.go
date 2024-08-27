@@ -14,8 +14,8 @@ type Output struct {
 	Dir    string
 }
 
-func NewProxyBuilder(target, overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix string,
-	fipsBuild, wasm, gperftools, dynamicModulesBuild bool, output *Output) (*ProxyBuilder, error) {
+func NewProxyBuilder(target, overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix, dynamicModulesBuild string,
+	fipsBuild, wasm, gperftools bool, output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 
 	patchGetterSource := patch.Source(patchSource)
@@ -54,11 +54,11 @@ type ProxyBuilder struct {
 	istioProxy          arg.Version
 	patchGetter         patch.Getter
 	fipsBuild           bool
-	dynamicModulesBuild bool
 	wasm                bool
 	gperftools          bool
 	remoteCache         string
 	patchInfoName       string
+	dynamicModulesBuild string
 	patchSuffix         string
 
 	// these are for output

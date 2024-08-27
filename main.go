@@ -124,8 +124,8 @@ var (
 	overrideEnvoy       string
 	patchSource         string
 	patchSourceName     string
+	dynamicModulesBuild string
 	fipsBuild           bool
-	dynamicModulesBuild bool
 	gperftools          bool
 	wasm                bool
 	remoteCache         string
@@ -146,8 +146,8 @@ var (
 		Short: "Proxy build info",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix,
-				fipsBuild, wasm, gperftools, dynamicModulesBuild, nil)
+			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix, dynamicModulesBuild,
+				fipsBuild, wasm, gperftools, nil)
 			if err != nil {
 				return err
 			}
@@ -160,8 +160,8 @@ var (
 		Short: "Proxy build output",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix,
-				fipsBuild, wasm, gperftools, dynamicModulesBuild, &build.Output{
+			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix, dynamicModulesBuild,
+				fipsBuild, wasm, gperftools, &build.Output{
 					Target: target,
 					Arch:   arch,
 				})
@@ -177,8 +177,8 @@ var (
 		Short: "Proxy release",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix,
-				fipsBuild, wasm, gperftools, dynamicModulesBuild, &build.Output{
+			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix, dynamicModulesBuild,
+				fipsBuild, wasm, gperftools, &build.Output{
 					Target: target,
 					Arch:   arch,
 					Repo:   repo,
@@ -196,8 +196,8 @@ var (
 		Short: "Build proxy based-on flavors",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix,
-				fipsBuild, wasm, gperftools, dynamicModulesBuild, nil)
+			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix, dynamicModulesBuild,
+				fipsBuild, wasm, gperftools, nil)
 			if err != nil {
 				return err
 			}
@@ -244,7 +244,7 @@ func init() {
 	proxyCmd.PersistentFlags().StringVar(&patchSourceName, "patch-source-name", "envoy", "Patch source name. For example: envoy, envoy-no-tls-chacha20-poly1305-sha256")
 	proxyCmd.PersistentFlags().StringVar(&patchSuffix, "patch-suffix", "", "Patch suffix, for example: -tlsnist-preview-") // The "-" prefix is important.
 	proxyCmd.PersistentFlags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
-	proxyCmd.PersistentFlags().BoolVar(&dynamicModulesBuild, "dynamic-modules-build", false, "Dynamic modules build")
+	proxyCmd.PersistentFlags().StringVar(&dynamicModulesBuild, "dynamic-modules-build", "tetrateio/envoy-dynamic-modules@main", "Dynamic modules build")
 	proxyCmd.PersistentFlags().BoolVar(&gperftools, "gperftools", false, "Use Gperftools build")
 	proxyCmd.PersistentFlags().BoolVar(&wasm, "wasm", runtime.GOARCH == "amd64", "Build wasm")
 	proxyCmd.PersistentFlags().StringVar(&remoteCache, "remote-cache", "", "Remote cache. E.g. us-central1, asia-south2")

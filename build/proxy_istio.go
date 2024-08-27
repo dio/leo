@@ -18,18 +18,18 @@ import (
 )
 
 type IstioProxyBuilder struct {
-	Istio      arg.Version
-	IstioProxy arg.Version
-	Version    string
-	Envoy      arg.Version
-	Patch      patch.Getter
-	FIPSBuild  bool
-	// Currently, we use boolean to determine if we need to build dynamic modules.
-	DynamicModulesBuild bool
+	Istio               arg.Version
+	IstioProxy          arg.Version
+	Version             string
+	Envoy               arg.Version
+	Patch               patch.Getter
+	FIPSBuild           bool
+	DynamicModulesBuild string
 	Wasm                bool
 	PatchInfoName       string
-	PatchSuffix         string
 	Gperftools          bool
+
+	PatchSuffix string
 
 	remoteCache string
 	output      *Output
@@ -167,7 +167,7 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		return err
 	}
 
-	if b.DynamicModulesBuild {
+	if len(b.DynamicModulesBuild) > 0 {
 		remoteProxyDir += "-dynamic-modules"
 		tag = path.Join("dynamic-modules", tag)
 		title += "-dynamic-modules"
@@ -259,7 +259,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 	}
 
 	var suffix string
-	if b.DynamicModulesBuild {
+	if len(b.DynamicModulesBuild) > 0 {
 		suffix = "-dynamic-modules"
 		// When we have DynamicModulesBuild, we need to add the dynamic modules to the workspace.
 		// This is a hack since we use istio/proxy workspace vs. envoy workspace.
@@ -267,7 +267,11 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		modifiedIstioProxyWorkspace := istioproxy.AddDynamicModules(istioProxyWorkspace)
+		parsed, err := parseRepoRef(b.DynamicModulesBuild)
+		if err != nil {
+			return err
+		}
+		modifiedIstioProxyWorkspace := istioproxy.AddDynamicModules(istioProxyWorkspace, parsed.Repo, parsed.Ref)
 		if err := os.WriteFile(filepath.Join(istioProxyDir, "WORKSPACE"), []byte(modifiedIstioProxyWorkspace), os.ModePerm); err != nil {
 			return err
 		}
@@ -338,4 +342,21 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 	fmt.Print(istioProxyDir)
 
 	return nil
+}
+
+type RepoRef struct {
+	Repo string
+	Ref  string
+}
+
+func parseRepoRef(input string) (RepoRef, error) {
+	parts := strings.Split(input, "@")
+	if len(parts) != 2 {
+		return RepoRef{}, fmt.Errorf("invalid input format")
+	}
+
+	return RepoRef{
+		Repo: parts[0],
+		Ref:  parts[1],
+	}, nil
 }

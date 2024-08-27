@@ -2,6 +2,7 @@ package istioproxy
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -9,6 +10,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"text/template"
 
 	"github.com/bazelbuild/buildtools/build"
 )
@@ -113,7 +115,7 @@ type TargetOptions struct {
 	EnvoyVersion        string
 	RemoteCache         string // Remote cache values: us-central1 or asia-south2.
 	FIPSBuild           bool
-	DynamicModulesBuild bool
+	DynamicModulesBuild string
 	Gperftools          bool
 	Wasm                bool
 	EnvoyRepo           string
@@ -601,12 +603,29 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
     name = "envoy-dynamic-modules",
-    branch = "main",
-    remote = "https://github.com/tetrateio/envoy-dynamic-modules",
+    branch = {{ .ref}},
+    remote = "https://github.com/{{ .repo }}",
 )
 `
 
+var privateEnvoyDynamicModulesTemplate = template.Must(
+	template.New("privateEnvoyDynamicModules").Parse(privateEnvoyDynamicModules))
+
 // AddDynamicModules adds envoy-dynamic-modules to the WORKSPACE file.
-func AddDynamicModules(workspace string) string {
-	return workspace + privateEnvoyDynamicModules
+func AddDynamicModules(workspace, repo, ref string) string {
+	if repo == "" {
+		repo = "https://github.com/tetrateio/envoy-dynamic-modules"
+	}
+
+	if ref == "" {
+		ref = "main"
+	}
+
+	var result bytes.Buffer
+	_ = privateEnvoyDynamicModulesTemplate.Execute(&result, map[string]string{
+		"repo": repo,
+		"ref":  ref,
+	})
+
+	return workspace + result.String()
 }

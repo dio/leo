@@ -229,7 +229,7 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 `, b.Istio.Repo(), b.Version[0:7], b.IstioProxy.Name(), b.IstioProxy.Version()[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
 
 	if len(b.DynamicModulesBuild) > 0 {
-		notes += fmt.Sprintf("- https://" + strings.Replace(b.DynamicModulesBuild, "@", "/commits/", 1) + "\n")
+		notes += fmt.Sprintf("- https://github.com/" + strings.Replace(b.DynamicModulesBuild, "@", "/commits/", 1) + "\n")
 	}
 
 	if err := sh.RunV(ctx, "gh", "release", "view", tag, "-R", b.output.Repo); err != nil {

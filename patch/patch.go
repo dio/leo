@@ -2,6 +2,7 @@ package patch
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/url"
@@ -73,7 +74,7 @@ func (g GitHubGetter) Get(ctx context.Context, info Info) ([]byte, error) {
 		return []byte(content + "\n"), nil
 	}
 
-	return []byte{}, nil
+	return []byte{}, errors.New("patch not found")
 }
 
 func (g GitHubGetter) List(ctx context.Context, path, prefix string) ([]Info, error) {
@@ -156,7 +157,7 @@ func (g FSGetter) Get(_ context.Context, info Info) ([]byte, error) {
 		}
 	}
 
-	return []byte{}, nil
+	return []byte{}, errors.New("patch not found")
 }
 
 func (f FSGetter) List(ctx context.Context, patchPath, prefix string) ([]Info, error) {

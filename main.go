@@ -267,7 +267,7 @@ func init() {
 	proxyCmd.PersistentFlags().BoolVar(&wasm, "wasm", runtime.GOARCH == "amd64", "Build wasm")
 	proxyCmd.PersistentFlags().StringVar(&remoteCache, "remote-cache", "", "Remote cache. E.g. us-central1, asia-south2")
 	proxyCmd.PersistentFlags().StringVar(&additionalPatchDir, "additional-patch-dir", "", "Additional patches directory")
-	proxyCmd.PersistentFlags().StringVar(&additionalPatchDirSource, "additional-patch-source", patchSource, "Additional patches directory source, default to same source as 'patch-source' value")
+	proxyCmd.PersistentFlags().StringVar(&additionalPatchDirSource, "additional-patch-source", "", "Additional patches directory source, default to same source as 'patch-source' value")
 
 	proxyOutputCmd.Flags().StringVar(&target, "target", "istio-proxy", "Build target, i.e. envoy, istio-proxy")
 	proxyOutputCmd.Flags().StringVar(&arch, "arch", runtime.GOARCH, "Builder architecture")

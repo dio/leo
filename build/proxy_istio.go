@@ -38,29 +38,32 @@ type IstioProxyBuilder struct {
 }
 
 func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
-	istioRepo := "istio/istio"
-	if len(b.Istio.Repo().Owner()) != 0 {
-		istioRepo = string(b.Istio.Repo())
-		if b.Istio.Name() == "tetrateio-proxy" {
-			istioRepo = "istio/istio"
+	if b.Istio.Name() == "tetrateio-proxy" {
+		b.Version = b.Istio.Version()
+		b.IstioProxy = arg.Version(fmt.Sprintf("istio/proxy@%s", b.Istio.Version()))
+	} else {
+		istioRepo := "istio/istio"
+		if len(b.Istio.Repo().Owner()) != 0 {
+			istioRepo = string(b.Istio.Repo())
+
 		}
-	}
 
-	istioRef, err := github.ResolveCommitSHA(ctx, istioRepo, b.Version)
-	if err != nil {
-		return "", "", err
-	}
-	b.Version = istioRef
-
-	// When IstioProxy is not set, we need to resolve the proxy from the istio.deps.
-	if b.IstioProxy.IsEmpty() {
-		deps, err := istio.GetDeps(ctx, istioRepo, b.Version)
+		istioRef, err := github.ResolveCommitSHA(ctx, istioRepo, b.Version)
 		if err != nil {
 			return "", "", err
 		}
-		b.IstioProxy = arg.Version(fmt.Sprintf("istio/proxy@%s", deps.Get("proxy").SHA))
-	} else {
-		b.IstioProxy = arg.Version(fmt.Sprintf("%s@%s", b.IstioProxy.Name(), b.IstioProxy.Version()))
+		b.Version = istioRef
+
+		// When IstioProxy is not set, we need to resolve the proxy from the istio.deps.
+		if b.IstioProxy.IsEmpty() {
+			deps, err := istio.GetDeps(ctx, istioRepo, b.Version)
+			if err != nil {
+				return "", "", err
+			}
+			b.IstioProxy = arg.Version(fmt.Sprintf("istio/proxy@%s", deps.Get("proxy").SHA))
+		} else {
+			b.IstioProxy = arg.Version(fmt.Sprintf("%s@%s", b.IstioProxy.Name(), b.IstioProxy.Version()))
+		}
 	}
 
 	// When "envoy" is empty, we need to resolve our envoy from the istio.deps.

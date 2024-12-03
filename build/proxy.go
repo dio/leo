@@ -34,7 +34,13 @@ func NewProxyBuilder(target,
 	} else {
 		patchGetter = &patch.GitHubGetter{
 			Repo: patchPath, // TODO(dio): Allow to override this.
+			Ref:  patchGetterSource.Ref(),
 		}
+	}
+
+	if additionalPatchDirSource == "" {
+		additionalPatchDirSource = patchSource
+		additionalPatchGetter = patchGetter
 	}
 
 	if additionalPatchDirSource != patchSource {

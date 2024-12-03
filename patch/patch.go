@@ -37,8 +37,16 @@ type GitHubGetter struct {
 }
 
 func (g GitHubGetter) Get(ctx context.Context, info Info) ([]byte, error) {
+
+	ref := g.Ref
+	if ref == "" {
+		ref = "main"
+	}
+
+	fmt.Fprintln(os.Stderr, "Searching for patch", info.Name+"/"+info.Ref, "in", g.Repo+"@"+ref)
+
 	// Try getting the file from the ref branch first
-	content, err := github.GetRaw(ctx, g.Repo, info.Name, info.Ref)
+	content, err := github.GetRaw(ctx, g.Repo, info.Name, ref)
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
@@ -48,28 +56,28 @@ func (g GitHubGetter) Get(ctx context.Context, info Info) ([]byte, error) {
 
 	// E.g. 1.29.0-fips.patch.
 	patchFile := info.Ref + info.Suffix + ".patch"
-	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), "main")
+	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), ref)
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
 
 	// We search for minor with suffix. E.g. 1.29-fips.patch.
 	patchFile = minorName + info.Suffix + ".patch"
-	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), "main")
+	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), ref)
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
 
 	// E.g. 1.29.0.patch.
 	patchFile = info.Ref + ".patch"
-	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), "main")
+	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), ref)
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
 
 	// We search for minor. E.g. 1.29.patch.
 	patchFile = minorName + ".patch"
-	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), "main")
+	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), ref)
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}

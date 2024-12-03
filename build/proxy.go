@@ -25,10 +25,8 @@ func NewProxyBuilder(target,
 	var additionalPatchGetter patch.Getter
 
 	patchGetterSource := patch.Source(patchSource)
-	patchPath, err := patchGetterSource.Path()
-	if err != nil {
-		return nil, err
-	}
+	patchPath := patchGetterSource.Path()
+
 	if patchGetterSource.IsLocal() {
 		patchGetter = &patch.FSGetter{
 			Dir: patchPath, // TODO(dio): Allow to override this.
@@ -41,10 +39,8 @@ func NewProxyBuilder(target,
 
 	if additionalPatchDirSource != patchSource {
 		additionalPatchGetterSource := patch.Source(additionalPatchDirSource)
-		additionalPatchPath, err := additionalPatchGetterSource.Path()
-		if err != nil {
-			return nil, err
-		}
+		additionalPatchPath := additionalPatchGetterSource.Path()
+
 		if additionalPatchGetterSource.IsLocal() {
 			additionalPatchGetter = &patch.FSGetter{
 				Dir: additionalPatchPath, // TODO(dio): Allow to override this.
@@ -52,6 +48,7 @@ func NewProxyBuilder(target,
 		} else {
 			additionalPatchGetter = &patch.GitHubGetter{
 				Repo: additionalPatchPath, // TODO(dio): Allow to override this.
+				Ref:  additionalPatchGetterSource.Ref(),
 			}
 		}
 	}

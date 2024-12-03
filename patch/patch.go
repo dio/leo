@@ -36,12 +36,18 @@ type GitHubGetter struct {
 }
 
 func (g GitHubGetter) Get(ctx context.Context, info Info) ([]byte, error) {
+	// Try getting the file from the ref branch first
+	content, err := github.GetRaw(ctx, g.Repo, info.Name, info.Ref)
+	if err == nil {
+		return []byte(content + "\n"), nil
+	}
+
 	idx := strings.LastIndex(info.Ref, ".")
 	minorName := info.Ref[0:idx]
 
 	// E.g. 1.29.0-fips.patch.
 	patchFile := info.Ref + info.Suffix + ".patch"
-	content, err := github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), "main")
+	content, err = github.GetRaw(ctx, g.Repo, path.Join("patches", info.Name, patchFile), "main")
 	if err == nil {
 		return []byte(content + "\n"), nil
 	}
@@ -93,12 +99,13 @@ type FSGetter struct {
 }
 
 func (g FSGetter) Get(_ context.Context, info Info) ([]byte, error) {
+	var (
+		content []byte
+		err     error
+	)
 
-	if info.Ref == "" {
-		content, err := os.ReadFile(filepath.Join(g.Dir, info.Name))
-		if err != nil {
-			return nil, err
-		}
+	content, err = os.ReadFile(filepath.Join(g.Dir, info.Name))
+	if err == nil {
 		return content, nil
 	}
 
@@ -108,7 +115,6 @@ func (g FSGetter) Get(_ context.Context, info Info) ([]byte, error) {
 		return nil, err
 	}
 
-	var content []byte
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -225,10 +231,24 @@ func (s Source) IsLocal() bool {
 	return strings.HasPrefix(string(s), "file://")
 }
 
-func (s Source) Path() (string, error) {
+func (s Source) Path() string {
 	parsed, err := url.Parse(string(s))
 	if err != nil {
-		return "", nil
+		return ""
 	}
-	return strings.TrimPrefix(string(s), parsed.Scheme+"://"), nil
+	p := strings.TrimPrefix(string(s), parsed.Scheme+"://")
+
+	parts := strings.Split(p, "@")
+	if len(parts) != 2 {
+		return p
+	}
+	return parts[0]
+}
+
+func (s Source) Ref() string {
+	parts := strings.Split(string(s), "@")
+	if len(parts) != 2 {
+		return ""
+	}
+	return parts[1]
 }

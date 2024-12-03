@@ -120,21 +120,23 @@ var (
 		},
 	}
 
-	overrideIstioProxy  string
-	overrideEnvoy       string
-	patchSource         string
-	patchSourceName     string
-	dynamicModulesBuild string
-	fipsBuild           bool
-	gperftools          bool
-	wasm                bool
-	remoteCache         string
-	target              string
-	arch                string
-	version             string
-	repo                string
-	dir                 string
-	patchSuffix         string
+	overrideIstioProxy       string
+	overrideEnvoy            string
+	additionalPatchDir       string
+	additionalPatchDirSource string
+	patchSource              string
+	patchSourceName          string
+	dynamicModulesBuild      string
+	fipsBuild                bool
+	gperftools               bool
+	wasm                     bool
+	remoteCache              string
+	target                   string
+	arch                     string
+	version                  string
+	repo                     string
+	dir                      string
+	patchSuffix              string
 
 	proxyCmd = &cobra.Command{
 		Use:   "proxy <command> [flags]",
@@ -146,7 +148,11 @@ var (
 		Short: "Proxy build info",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix, dynamicModulesBuild,
+			builder, err := build.NewProxyBuilder(args[0],
+				overrideIstioProxy, overrideEnvoy,
+				patchSource, patchSourceName,
+				remoteCache, patchSuffix, dynamicModulesBuild,
+				additionalPatchDir, additionalPatchDirSource,
 				fipsBuild, wasm, gperftools, nil)
 			if err != nil {
 				return err
@@ -160,7 +166,11 @@ var (
 		Short: "Proxy build output",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix, dynamicModulesBuild,
+			builder, err := build.NewProxyBuilder(args[0],
+				overrideIstioProxy, overrideEnvoy,
+				patchSource, patchSourceName,
+				remoteCache, patchSuffix, dynamicModulesBuild,
+				additionalPatchDir, additionalPatchDirSource,
 				fipsBuild, wasm, gperftools, &build.Output{
 					Target: target,
 					Arch:   arch,
@@ -177,7 +187,11 @@ var (
 		Short: "Proxy release",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix, dynamicModulesBuild,
+			builder, err := build.NewProxyBuilder(args[0],
+				overrideIstioProxy, overrideEnvoy,
+				patchSource, patchSourceName,
+				remoteCache, patchSuffix, dynamicModulesBuild,
+				additionalPatchDir, additionalPatchDirSource,
 				fipsBuild, wasm, gperftools, &build.Output{
 					Target: target,
 					Arch:   arch,
@@ -196,7 +210,11 @@ var (
 		Short: "Build proxy based-on flavors",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			builder, err := build.NewProxyBuilder(args[0], overrideIstioProxy, overrideEnvoy, patchSource, patchSourceName, remoteCache, patchSuffix, dynamicModulesBuild,
+			builder, err := build.NewProxyBuilder(args[0],
+				overrideIstioProxy, overrideEnvoy,
+				patchSource, patchSourceName,
+				remoteCache, patchSuffix, dynamicModulesBuild,
+				additionalPatchDir, additionalPatchDirSource,
 				fipsBuild, wasm, gperftools, nil)
 			if err != nil {
 				return err
@@ -248,6 +266,9 @@ func init() {
 	proxyCmd.PersistentFlags().BoolVar(&gperftools, "gperftools", false, "Use Gperftools build")
 	proxyCmd.PersistentFlags().BoolVar(&wasm, "wasm", runtime.GOARCH == "amd64", "Build wasm")
 	proxyCmd.PersistentFlags().StringVar(&remoteCache, "remote-cache", "", "Remote cache. E.g. us-central1, asia-south2")
+	proxyCmd.PersistentFlags().StringVar(&additionalPatchDir, "additional-patch-dir", "", "Additional patches directory")
+	proxyCmd.PersistentFlags().StringVar(&additionalPatchDirSource, "additional-patch-source", patchSource, "Additional patches directory source, default to same source as 'patch-source' value")
+
 	proxyOutputCmd.Flags().StringVar(&target, "target", "istio-proxy", "Build target, i.e. envoy, istio-proxy")
 	proxyOutputCmd.Flags().StringVar(&arch, "arch", runtime.GOARCH, "Builder architecture")
 	proxyReleaseCmd.Flags().StringVar(&target, "target", "istio-proxy", "Build target, i.e. envoy, istio-proxy")

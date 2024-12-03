@@ -3,10 +3,12 @@ package patch
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/dio/leo/github"
@@ -21,6 +23,7 @@ type Info struct {
 
 type Getter interface {
 	Get(context.Context, Info) ([]byte, error)
+	List(context.Context, string, string) ([]Info, error)
 }
 
 func Get(ctx context.Context, info Info, getter Getter) ([]byte, error) {
@@ -29,6 +32,7 @@ func Get(ctx context.Context, info Info, getter Getter) ([]byte, error) {
 
 type GitHubGetter struct {
 	Repo string
+	Ref  string
 }
 
 func (g GitHubGetter) Get(ctx context.Context, info Info) ([]byte, error) {
@@ -66,11 +70,38 @@ func (g GitHubGetter) Get(ctx context.Context, info Info) ([]byte, error) {
 	return []byte{}, nil
 }
 
+func (g GitHubGetter) List(ctx context.Context, path, prefix string) ([]Info, error) {
+	var list []Info
+
+	names, err := github.GetPatchList(ctx, g.Repo, g.Ref, path, prefix)
+	if err != nil {
+		return list, err
+	}
+
+	for _, name := range names {
+		list = append(list, Info{
+			Name: name,
+			Ref:  g.Ref,
+		})
+	}
+
+	return list, nil
+}
+
 type FSGetter struct {
 	Dir string
 }
 
 func (g FSGetter) Get(_ context.Context, info Info) ([]byte, error) {
+
+	if info.Ref == "" {
+		content, err := os.ReadFile(filepath.Join(g.Dir, info.Name))
+		if err != nil {
+			return nil, err
+		}
+		return content, nil
+	}
+
 	baseDir := filepath.Join(g.Dir, info.Name)
 	entries, err := os.ReadDir(baseDir)
 	if err != nil {
@@ -122,6 +153,32 @@ func (g FSGetter) Get(_ context.Context, info Info) ([]byte, error) {
 	return []byte{}, nil
 }
 
+func (f FSGetter) List(ctx context.Context, patchPath, prefix string) ([]Info, error) {
+	var list []Info
+
+	entries, err := os.ReadDir(path.Join(f.Dir, patchPath))
+	if err != nil {
+		return list, err
+	}
+
+	slices.SortFunc(entries, func(i, j fs.DirEntry) int {
+		return strings.Compare(i.Name(), j.Name())
+	})
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		if strings.HasPrefix(entry.Name(), prefix+"-") {
+			list = append(list, Info{
+				Name: path.Join(patchPath, entry.Name()),
+			})
+		}
+	}
+
+	return list, nil
+}
+
 func Apply(ctx context.Context, info Info, patchGetter Getter, dst string) error {
 	patchData, err := patchGetter.Get(ctx, info)
 	if err != nil {
@@ -143,6 +200,23 @@ func Apply(ctx context.Context, info Info, patchGetter Getter, dst string) error
 	}
 	fmt.Fprintln(os.Stderr, "patching", info.Name, "with", patchFile.Name())
 	return sh.Run(ctx, "patch", "-p1", "-i", patchFile.Name(), "-d", dst)
+}
+
+// ApplyDir applies all patches in the patchDir directory with the given prefix into the dst directory.
+func ApplyDir(ctx context.Context, patchGetter Getter, patchDir, prefix, dst string) error {
+
+	infos, err := patchGetter.List(ctx, patchDir, prefix)
+	if err != nil {
+		return err
+	}
+
+	for _, info := range infos {
+		if err := Apply(ctx, info, patchGetter, dst); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type Source string

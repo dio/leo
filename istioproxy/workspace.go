@@ -86,8 +86,7 @@ echo "BUILD_CONFIG Release"
 	return os.WriteFile(filepath.Join(proxyDir, "bazel", "bazel_get_workspace_status_"+name), []byte(content), os.ModePerm)
 }
 
-func WriteWorkspaceStatus(proxyDir, envoyName, envoySHA string) error {
-	status := "istio/proxy"
+func WriteWorkspaceStatus(proxyDir, status, envoyName, envoySHA string) error {
 	if envoyName != "envoyproxy/envoy" {
 		status = path.Join(status, envoyName, envoySHA[0:7])
 	}

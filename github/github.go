@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -112,6 +113,25 @@ type RefObject struct {
 type Runs struct {
 	Count int `json:"total_count"`
 }
+
+type PathContents struct {
+	Name        string `json:"name"`
+	Path        string `json:"path"`
+	SHA         string `json:"sha"`
+	Size        int    `json:"size"`
+	URL         string `json:"url"`
+	HTMLURL     string `json:"html_url"`
+	GitURL      string `json:"git_url"`
+	DownloadURL string `json:"download_url"`
+	Type        string `json:"type"`
+	Links       struct {
+		Self string `json:"self"`
+		Git  string `json:"git"`
+		HTML string `json:"html"`
+	} `json:"_links"`
+}
+
+type PathContentsList []PathContents
 
 func WorkflowRuns(ctx context.Context, repo, status string) (int, error) {
 	args := []string{
@@ -301,6 +321,43 @@ func GetNewerPatchRelease(ctx context.Context, version string) (string, error) {
 		}
 	}
 	return "", errors.New("not found")
+}
+
+func GetPatchList(ctx context.Context, repo, ref, patchDir, prefix string) ([]string, error) {
+	refQuery := ""
+	if len(ref) > 0 {
+		refQuery = fmt.Sprintf("ref=%s", ref)
+	}
+	args := []string{
+		"-fsSL",
+		"-H", "Accept: application/vnd.github.v3.json",
+		fmt.Sprintf("https://api.github.com/repos/%s/contents/%s?%s", repo, patchDir, refQuery),
+	}
+	args = append(args, token()...)
+
+	var r []string
+
+	out, err := sh.Output(ctx, "curl", args...)
+	if err != nil {
+		return r, err
+	}
+	var list PathContentsList
+	if err := json.Unmarshal([]byte(out), &list); err != nil {
+		return r, err
+	}
+
+	slices.SortFunc(list, func(i, j PathContents) int {
+		return strings.Compare(i.Name, j.Name)
+	})
+
+	for _, p := range list {
+		if !strings.HasPrefix(p.Name, prefix+"-") {
+			continue
+		}
+		r = append(r, p.Path)
+	}
+
+	return r, nil
 }
 
 func token() []string {

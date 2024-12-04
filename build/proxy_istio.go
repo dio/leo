@@ -29,33 +29,41 @@ type IstioProxyBuilder struct {
 	PatchInfoName       string
 	Gperftools          bool
 
-	PatchSuffix string
+	PatchSuffix           string
+	AdditionalPatchDir    string
+	AdditionalPatchGetter patch.Getter
 
 	remoteCache string
 	output      *Output
 }
 
 func (b *IstioProxyBuilder) info(ctx context.Context) (string, string, error) {
-	istioRepo := "istio/istio"
-	if len(b.Istio.Repo().Owner()) != 0 {
-		istioRepo = string(b.Istio.Repo())
-	}
+	if b.Istio.Name() == "tetrateio-proxy" {
+		b.Version = b.Istio.Version()
+		b.IstioProxy = arg.Version(fmt.Sprintf("istio/proxy@%s", b.Istio.Version()))
+	} else {
+		istioRepo := "istio/istio"
+		if len(b.Istio.Repo().Owner()) != 0 {
+			istioRepo = string(b.Istio.Repo())
 
-	istioRef, err := github.ResolveCommitSHA(ctx, istioRepo, b.Version)
-	if err != nil {
-		return "", "", err
-	}
-	b.Version = istioRef
+		}
 
-	// When IstioProxy is not set, we need to resolve the proxy from the istio.deps.
-	if b.IstioProxy.IsEmpty() {
-		deps, err := istio.GetDeps(ctx, istioRepo, b.Version)
+		istioRef, err := github.ResolveCommitSHA(ctx, istioRepo, b.Version)
 		if err != nil {
 			return "", "", err
 		}
-		b.IstioProxy = arg.Version(fmt.Sprintf("istio/proxy@%s", deps.Get("proxy").SHA))
-	} else {
-		b.IstioProxy = arg.Version(fmt.Sprintf("%s@%s", b.IstioProxy.Name(), b.IstioProxy.Version()))
+		b.Version = istioRef
+
+		// When IstioProxy is not set, we need to resolve the proxy from the istio.deps.
+		if b.IstioProxy.IsEmpty() {
+			deps, err := istio.GetDeps(ctx, istioRepo, b.Version)
+			if err != nil {
+				return "", "", err
+			}
+			b.IstioProxy = arg.Version(fmt.Sprintf("istio/proxy@%s", deps.Get("proxy").SHA))
+		} else {
+			b.IstioProxy = arg.Version(fmt.Sprintf("%s@%s", b.IstioProxy.Name(), b.IstioProxy.Version()))
+		}
 	}
 
 	// When "envoy" is empty, we need to resolve our envoy from the istio.deps.
@@ -135,6 +143,12 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		title = "istio-proxy@" + istioProxyRef[0:7]
 		remoteProxyDir = "proxy"
 		remoteProxyRef = "alpha-" + istioProxyRef
+		if b.Istio.Name() == "tetrateio-proxy" {
+			tag = path.Join("tetrateio-proxy", istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
+			title = "tetrateio-proxy@" + istioProxyRef[0:7]
+			remoteProxyDir = "tetrateio-proxy"
+			remoteProxyRef = "alpha-" + istioProxyRef
+		}
 
 	case "istio-proxy-centos7":
 		tag = path.Join("istio", b.Version[0:7], "proxy", istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
@@ -222,11 +236,16 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		}
 	}
 
+	istioRepo := "istio/istio"
+	if b.Istio.Name() == "tetrateio-proxy" {
+		istioRepo = "istio/istio"
+	}
+
 	notes := fmt.Sprintf(`
 - https://github.com/%s/commits/%s
 - https://github.com/%s/commits/%s
 - https://github.com/%s/commits/%s
-`, b.Istio.Repo(), b.Version[0:7], b.IstioProxy.Name(), b.IstioProxy.Version()[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
+`, istioRepo, b.Version[0:7], b.IstioProxy.Name(), b.IstioProxy.Version()[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
 
 	if len(b.DynamicModulesBuild) > 0 {
 		notes += fmt.Sprintf("- https://github.com/" + strings.Replace(b.DynamicModulesBuild, "@", "/commits/", 1) + "\n")
@@ -323,7 +342,26 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		}
 	}
 
-	if err := istioproxy.WriteWorkspaceStatus(istioProxyDir, b.Envoy.Name(), b.Envoy.Version()); err != nil {
+	// When patch dir is specified, we apply patches from the directory to the envoy and istio-proxy sources.
+	// The patch files are prefixed with "envoy" and "proxy" respectively and we apply one by one into
+	// the envoy and istio-proxy directories.
+	if len(b.AdditionalPatchDir) > 0 {
+		err = patch.ApplyDir(ctx, b.AdditionalPatchGetter, b.AdditionalPatchDir, "proxy", istioProxyDir)
+		if err != nil {
+			return err
+		}
+
+		err = patch.ApplyDir(ctx, b.AdditionalPatchGetter, b.AdditionalPatchDir, "envoy", envoyDir)
+		if err != nil {
+			return err
+		}
+	}
+
+	status := "istio/proxy"
+	if b.Istio.Name() == "tetrateio-proxy" {
+		status = "tetrateio-proxy"
+	}
+	if err := istioproxy.WriteWorkspaceStatus(istioProxyDir, status, b.Envoy.Name(), b.Envoy.Version()); err != nil {
 		return err
 	}
 

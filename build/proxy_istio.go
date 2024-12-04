@@ -359,7 +359,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 
 	status := "istio/proxy"
 	if b.Istio.Name() == "tetrateio-proxy" {
-		status = "tetrateio-proxy"
+		status = "tetrateio/proxy"
 	}
 	if err := istioproxy.WriteWorkspaceStatus(istioProxyDir, status, b.Envoy.Name(), b.Envoy.Version()); err != nil {
 		return err

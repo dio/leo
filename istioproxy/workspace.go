@@ -302,7 +302,7 @@ istio-proxy-centos7-status:
 	cp -f bazel/bazel_get_workspace_status_istio-proxy bazel/bazel_get_workspace_status
 
 istio-proxy-centos7: istio-proxy-centos7-status
-	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
+	bazel build %s %s --stamp --strip=always --override_repository=envoy=/work%s %s %s %s
 	mkdir -p /work/out/usr/local/bin
 	cp -f %s /work/out/usr/local/bin/envoy
 	tar -czf /work/out/%s -C /work/out usr
@@ -365,7 +365,7 @@ istio-proxy-status:
 	cp -f bazel/bazel_get_workspace_status_istio-proxy bazel/bazel_get_workspace_status
 
 istio-proxy: istio-proxy-status %s
-	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
+	bazel build %s %s --stamp --strip=always --override_repository=envoy=/work%s %s %s %s
 	mkdir -p /work/out/usr/local/bin
 	cp -f %s /work/out/usr/local/bin/envoy
 	tar -czf /work/out/%s -C /work/out usr
@@ -427,7 +427,7 @@ envoy-status:
 	cp -f bazel/bazel_get_workspace_status_envoy bazel/bazel_get_workspace_status
 
 envoy: envoy-status
-	bazel build %s %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
+	bazel build %s %s --stamp --strip=always --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -487,7 +487,7 @@ envoy-centos7-status:
 	cp -f bazel/bazel_get_workspace_status_envoy bazel/bazel_get_workspace_status
 
 envoy-centos7: envoy-centos7-status
-	bazel build %s %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
+	bazel build %s %s --stamp --strip=always --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -545,7 +545,7 @@ envoy-contrib-status:
 	cp -f bazel/bazel_get_workspace_status_envoy-contrib bazel/bazel_get_workspace_status
 
 envoy-contrib: envoy-contrib-status
-	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
+	bazel build %s %s --stamp --strip=always --override_repository=envoy=/work%s %s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy

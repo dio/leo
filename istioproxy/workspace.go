@@ -429,7 +429,7 @@ envoy-status:
 envoy: envoy-status
 	bazel build %s %s --stamp --define=no_debug_info=1 --strip=always --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
 	mkdir -p /work/out
-	cp -f %s %s/envoy
+	strip -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
 `
 	return fmt.Sprintf(content,
@@ -489,7 +489,7 @@ envoy-centos7-status:
 envoy-centos7: envoy-centos7-status
 	bazel build %s %s --stamp --define=no_debug_info=1 --strip=always --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
 	mkdir -p /work/out
-	cp -f %s %s/envoy
+	strip -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
 `
 	return fmt.Sprintf(content,
@@ -547,7 +547,7 @@ envoy-contrib-status:
 envoy-contrib: envoy-contrib-status
 	bazel build %s %s --stamp --define=no_debug_info=1 --strip=always --override_repository=envoy=/work%s %s %s %s
 	mkdir -p /work/out
-	cp -f %s %s/envoy
+	strip -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
 `
 	return fmt.Sprintf(content,

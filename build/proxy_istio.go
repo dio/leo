@@ -125,6 +125,43 @@ func (b *IstioProxyBuilder) Output(ctx context.Context) error {
 	return nil
 }
 
+func (b *IstioProxyBuilder) getRemoteProxyDir() string {
+	remoteProxyDir := ""
+	switch b.output.Target {
+	case "istio-proxy":
+		remoteProxyDir = "proxy"
+		if b.Istio.Name() == "tetrateio-proxy" {
+			remoteProxyDir = "tetrateio-proxy"
+		}
+
+	case "istio-proxy-centos7":
+		remoteProxyDir = "proxy"
+
+	case "envoy-contrib":
+		remoteProxyDir = "envoy-contrib"
+
+	case "envoy":
+		remoteProxyDir = "envoy"
+
+	case "envoy-centos7":
+		remoteProxyDir = "envoy"
+	}
+
+	if len(b.DynamicModulesBuild) > 0 {
+		remoteProxyDir += "-dynamic-modules"
+	}
+	if b.FIPSBuild {
+		remoteProxyDir += "-fips"
+	}
+
+	// Adjust remoteProxyDir for proxies which envoy is not envoyproxy/envoy or istio proxy is not tetrateio-proxy.
+	if b.Istio.Name() != "tetrateio-proxy" && b.Envoy.Name() != "envoyproxy/envoy" {
+		remoteProxyDir += "-" + arg.Repo(b.Envoy.Name()).Owner()
+	}
+
+	return remoteProxyDir
+}
+
 func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 	istioProxyRef, _, err := b.info(ctx)
 	if err != nil {
@@ -146,32 +183,27 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		if b.Istio.Name() == "tetrateio-proxy" {
 			tag = path.Join("tetrateio-proxy", istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
 			title = "tetrateio-proxy@" + istioProxyRef[0:7]
-			remoteProxyDir = "tetrateio-proxy"
 			remoteProxyRef = "alpha-" + istioProxyRef
 		}
 
 	case "istio-proxy-centos7":
 		tag = path.Join("istio", b.Version[0:7], "proxy", istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
 		title = "istio-proxy@" + istioProxyRef[0:7]
-		remoteProxyDir = "proxy"
 		remoteProxyRef = "centos-alpha-" + istioProxyRef
 
 	case "envoy-contrib":
 		tag = path.Join(b.Envoy.Name(), b.Envoy.Version()[0:7])
 		title = b.Envoy.Name() + "-contrib@" + b.Envoy.Version()[0:7]
-		remoteProxyDir = "envoy-contrib"
 		remoteProxyRef = b.Envoy.Version()
 
 	case "envoy":
 		tag = path.Join(b.Envoy.Name(), b.Envoy.Version()[0:7])
 		title = b.Envoy.Name() + "@" + b.Envoy.Version()[0:7]
-		remoteProxyDir = "envoy"
 		remoteProxyRef = b.Envoy.Version()
 
 	case "envoy-centos7":
 		tag = path.Join(b.Envoy.Name(), b.Envoy.Version()[0:7])
 		title = b.Envoy.Name() + "@" + b.Envoy.Version()[0:7]
-		remoteProxyDir = "envoy"
 		remoteProxyRef = "centos-" + b.Envoy.Version()
 	}
 
@@ -186,17 +218,12 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		remoteProxyDir += "-dynamic-modules"
 		// For example: dynamic-modules/b4c09ad/envoyproxy/envoy/7b8baff
 		tag = path.Join("dynamic-modules", parsed.Ref[0:7], tag)
 		title += "-dynamic-modules"
 	}
-	if b.FIPSBuild {
-		remoteProxyDir += "-fips"
-	}
-	if b.Envoy.Name() != "envoyproxy/envoy" {
-		remoteProxyDir += "-" + arg.Repo(b.Envoy.Name()).Owner()
-	}
+
+	remoteProxyDir = b.getRemoteProxyDir()
 	suffix := b.PatchSuffix + ".tar.gz"
 	if b.output.Arch != "amd64" {
 		suffix = "-" + b.output.Arch + b.PatchSuffix + ".tar.gz"

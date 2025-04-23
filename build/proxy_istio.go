@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/dio/leo/arg"
+	"github.com/dio/leo/env"
 	"github.com/dio/leo/github"
 	"github.com/dio/leo/istio"
 	"github.com/dio/leo/istioproxy"
@@ -234,7 +235,7 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 			continue
 		}
 		// Upload to GCS.
-		remoteFile := path.Join("tetrate-istio-subscription-build", remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
+		remoteFile := path.Join(env.GCS_BUCKET, remoteProxyDir, "envoy-"+remoteProxyRef+suffix)
 		if err := sh.RunV(ctx, "gsutil", "cp", file, "gs://"+remoteFile); err != nil {
 			return err
 		}
@@ -249,10 +250,10 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 	for _, file := range wasmFiles {
 		if strings.HasSuffix(file, ".wasm") {
 			baseName := filepath.Base(file)
-			remoteFile := path.Join("tetrate-istio-subscription-build",
+			remoteFile := path.Join(env.GCS_BUCKET,
 				remoteProxyDir, strings.Replace(baseName, ".wasm", "-"+istioProxyRef+".wasm", 1))
 			if strings.HasSuffix(file, ".compiled.wasm") {
-				remoteFile = path.Join("tetrate-istio-subscription-build",
+				remoteFile = path.Join(env.GCS_BUCKET,
 					remoteProxyDir, strings.Replace(baseName, ".compiled.wasm", "-"+istioProxyRef+".compiled.wasm", 1))
 			}
 

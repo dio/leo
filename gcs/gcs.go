@@ -18,7 +18,7 @@ func DownloadIstioLinuxTarball(ctx context.Context, dir, version string) (string
 		"-fsSL",
 		"-o",
 		targz,
-		fmt.Sprintf("https://storage.googleapis.com/tetrate-istio-subscription-build/istio/%s/istio-%s-linux-amd64.tar.gz", version, version),
+		fmt.Sprintf("https://storage.googleapis.com/"+env.GCS_BUCKET+"/istio/%s/istio-%s-linux-amd64.tar.gz", version, version),
 	}
 	args = append(args, token()...)
 

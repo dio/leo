@@ -154,7 +154,7 @@ COPY --from=linux_headers /usr/share/cmake-3.29 /usr/share/cmake-3.29
 
 RUN su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true -q update && \
   su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true install -yqq --no-install-recommends rsync \
-	libc++1 libc++abi1 libunwind8 libgcc-s1 && \
+	libc++1 libc++abi1 libunwind8 libgcc-s1 libc++-dev libc++abi-dev libunwind-dev  && \
 	if [ "$(uname -m)" = "aarch64" ]; then \
     ln -s /usr/lib/aarch64-linux-gnu/libunwind.so.8 /usr/lib/aarch64-linux-gnu/libunwind.so.1; \
   fi

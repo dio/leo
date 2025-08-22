@@ -154,7 +154,7 @@ COPY --from=linux_headers /usr/share/cmake-3.29 /usr/share/cmake-3.29
 
 RUN su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true -q update && \
   su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true install -yqq --no-install-recommends rsync \
-	libc++1 libc++abi1
+	libc++1 libc++abi1 libunwind8 libgcc-s1
 
 ENV BAZEL_BUILD_ARGS="`+remoteCache+`"`),
 		os.ModePerm); err != nil {

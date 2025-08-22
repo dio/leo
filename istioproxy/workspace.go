@@ -152,12 +152,28 @@ COPY --from=linux_headers /usr/include/linux/tcp.h /usr/include/linux/tcp.h
 COPY --from=linux_headers /usr/bin/cmake /usr/bin/cmake
 COPY --from=linux_headers /usr/share/cmake-3.29 /usr/share/cmake-3.29
 
-RUN su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true -q update && \
-  su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true install -yqq --no-install-recommends rsync \
-	libc++1 libc++abi1 libunwind8 libgcc-s1 libc++-dev libc++abi-dev libunwind-dev  && \
-	if [ "$(uname -m)" = "aarch64" ]; then \
-    ln -s /usr/lib/aarch64-linux-gnu/libunwind.so.8 /usr/lib/aarch64-linux-gnu/libunwind.so.1; \
-  fi
+RUN su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true \
+        -o Acquire::AllowInsecureRepositories=true \
+        -o Acquire::AllowDowngradeToInsecureRepositories=true -q update && \
+    su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true \
+        -o Acquire::AllowInsecureRepositories=true \
+        -o Acquire::AllowDowngradeToInsecureRepositories=true \
+        install -yqq --no-install-recommends \
+        rsync \
+        libgcc-s1 && \
+    if [ "$(uname -m)" = "aarch64" ]; then \
+        su-exec 0:0 apt-get -o APT::Get::AllowUnauthenticated=true \
+            -o Acquire::AllowInsecureRepositories=true \
+            -o Acquire::AllowDowngradeToInsecureRepositories=true \
+            install -yqq --no-install-recommends \
+            libc++1-18 libc++abi1-18 libc++-18-dev libc++abi-18-dev \
+            libunwind8 libunwind-dev && \
+        if [ -f /usr/lib/aarch64-linux-gnu/libunwind.so.8 ] && \
+           [ ! -e /usr/lib/aarch64-linux-gnu/libunwind.so.1 ]; then \
+            ln -s /usr/lib/aarch64-linux-gnu/libunwind.so.8 \
+                  /usr/lib/aarch64-linux-gnu/libunwind.so.1; \
+        fi; \
+    fi
 
 ENV BAZEL_BUILD_ARGS="`+remoteCache+`"`),
 		os.ModePerm); err != nil {

@@ -176,13 +176,19 @@ func (b *IstioProxyBuilder) Release(ctx context.Context) error {
 		title          string
 		remoteProxyDir string
 		remoteProxyRef string
+		debug          string
 	)
+
+	if b.Debug {
+		debug = "-debug"
+	}
+
 	switch b.output.Target {
 	case "istio-proxy":
 		tag = path.Join("istio", b.Version[0:7], "proxy", istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
 		title = "istio-proxy@" + istioProxyRef[0:7]
 		remoteProxyDir = "proxy"
-		remoteProxyRef = "alpha-" + istioProxyRef
+		remoteProxyRef = "alpha-" + istioProxyRef + debug
 		if b.Istio.Name() == "tetrateio-proxy" {
 			tag = path.Join("tetrateio-proxy", istioProxyRef[0:7], b.Envoy.Name(), b.Envoy.Version()[0:7])
 			title = "tetrateio-proxy@" + istioProxyRef[0:7]

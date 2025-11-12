@@ -12,6 +12,7 @@ type Output struct {
 	Arch   string
 	Repo   string
 	Dir    string
+	Debug  bool
 }
 
 func NewProxyBuilder(target,
@@ -19,7 +20,7 @@ func NewProxyBuilder(target,
 	patchSource, patchSourceName,
 	remoteCache, patchSuffix, dynamicModulesBuild,
 	additionalPatchDir, additionalPatchDirSource string,
-	fipsBuild, wasm, gperftools bool,
+	fipsBuild, wasm, gperftools, debug bool,
 	output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 	var additionalPatchGetter patch.Getter
@@ -68,6 +69,7 @@ func NewProxyBuilder(target,
 		dynamicModulesBuild:   dynamicModulesBuild,
 		gperftools:            gperftools,
 		wasm:                  wasm,
+		debug:                 debug,
 		output:                output,
 		remoteCache:           remoteCache,
 		patchInfoName:         patchSourceName,
@@ -83,6 +85,7 @@ type ProxyBuilder struct {
 	istioProxy          arg.Version
 	patchGetter         patch.Getter
 	fipsBuild           bool
+	debug               bool
 	wasm                bool
 	gperftools          bool
 	remoteCache         string
@@ -116,6 +119,7 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 			DynamicModulesBuild:   b.dynamicModulesBuild,
 			Gperftools:            b.gperftools,
 			Wasm:                  b.wasm,
+			Debug:                 b.debug,
 			remoteCache:           b.remoteCache,
 			PatchInfoName:         b.patchInfoName,
 			PatchSuffix:           b.patchSuffix,
@@ -142,6 +146,7 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 			FIPSBuild:             b.fipsBuild,
 			DynamicModulesBuild:   b.dynamicModulesBuild,
 			Wasm:                  b.wasm,
+			Debug:                 b.debug,
 			Gperftools:            b.gperftools,
 			output:                b.output,
 			remoteCache:           b.remoteCache,
@@ -171,6 +176,7 @@ func (b *ProxyBuilder) Release(ctx context.Context) error {
 			DynamicModulesBuild:   b.dynamicModulesBuild,
 			Gperftools:            b.gperftools,
 			Wasm:                  b.wasm,
+			Debug:                 b.debug,
 			output:                b.output,
 			remoteCache:           b.remoteCache,
 			PatchInfoName:         b.patchInfoName,
@@ -200,6 +206,7 @@ func (b *ProxyBuilder) Build(ctx context.Context) error {
 			DynamicModulesBuild:   b.dynamicModulesBuild,
 			Gperftools:            b.gperftools,
 			Wasm:                  b.wasm,
+			Debug:                 b.debug,
 			remoteCache:           b.remoteCache,
 			PatchInfoName:         b.patchInfoName,
 			PatchSuffix:           b.patchSuffix,

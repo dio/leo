@@ -118,6 +118,7 @@ type TargetOptions struct {
 	Gperftools          bool
 	Wasm                bool
 	EnvoyRepo           string
+	Debug               bool
 }
 
 func PrepareBuilder(proxyDir, remote string) error {
@@ -249,11 +250,15 @@ const (
 	configResetHostActionEnvCXX = "build:clang --host_action_env=CXX="
 )
 
-func buildConfigFlags(proxyDir string, gperftools bool) (string, error) {
-	var gperftoolsFlag string
+func buildConfigFlags(proxyDir string, gperftools, debug bool) (string, error) {
+	var flags string
 	if gperftools {
-		gperftoolsFlag = " --define=tcmalloc=gperftools "
+		flags += " --define=tcmalloc=gperftools "
 	}
+	if debug {
+		flags += " --compilation_mode=dbg "
+	}
+
 	// build --config=libc++20
 	data, err := os.ReadFile(filepath.Join(proxyDir, ".bazelrc"))
 	if err != nil {
@@ -272,12 +277,12 @@ func buildConfigFlags(proxyDir string, gperftools bool) (string, error) {
 
 	// When "configLibcxx" is enabled in proxy's .bazelrc, we don't need to specify it again.
 	// This to remedy: WARNING: The following configs were expanded more than once: [libc++, clang]. For repeatable flags, repeats are counted twice and may lead to unexpected behavior.
-	if strings.Contains(text, configLibcxx) {
-		return "--config=release" + gperftoolsFlag + setHostActionEnvCompiler, nil
+	if strings.Contains(text, configLibcxx) && !debug {
+		return "--config=release" + flags + setHostActionEnvCompiler, nil
 	}
 
 	// For older version, we need to explicitly enable --config=libc++.
-	return "--config=release --config=libc++" + gperftoolsFlag + setHostActionEnvCompiler, nil
+	return "--config=release --config=libc++" + flags + setHostActionEnvCompiler, nil
 }
 
 func IstioProxyCentos7Target(opts TargetOptions) (string, error) {
@@ -286,7 +291,7 @@ func IstioProxyCentos7Target(opts TargetOptions) (string, error) {
 		return "", err
 	}
 
-	buildConfig, err := buildConfigFlags(opts.ProxyDir, opts.Gperftools)
+	buildConfig, err := buildConfigFlags(opts.ProxyDir, opts.Gperftools, opts.Debug)
 	if err != nil {
 		return "", err
 	}
@@ -340,7 +345,7 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 		return "", err
 	}
 
-	buildConfig, err := buildConfigFlags(opts.ProxyDir, opts.Gperftools)
+	buildConfig, err := buildConfigFlags(opts.ProxyDir, opts.Gperftools, opts.Debug)
 	if err != nil {
 		return "", err
 	}
@@ -387,8 +392,19 @@ istio-proxy: istio-proxy-status %s
 	rm -fr /work/out/usr
 %s
 `
+	if opts.Debug {
+		targz = "istio-proxy-debug-" + runtime.GOARCH + ".tar.gz"
+		// In debug build, we don't strip the binary.
+		content = strings.ReplaceAll(content, "--stripopt=--strip-all", "")
+	}
+
 	if opts.Wasm && len(wasmTarget) > 0 {
 		content += buildWasmTarget(filepath.Join(opts.ProxyDir, "Makefile.core.mk"), strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1))
+	}
+
+	if !opts.Debug {
+		target = target + ".stripped"
+		binaryPath = binaryPath + ".stripped"
 	}
 
 	return fmt.Sprintf(content,
@@ -396,10 +412,10 @@ istio-proxy: istio-proxy-status %s
 		buildConfig,
 		boringssl,
 		strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1),
-		target+".stripped",
+		target,
 		remoteCache,
 		ldLibraryPath,
-		binaryPath+".stripped",
+		binaryPath,
 		targz,
 		copyWasm,
 	), nil
@@ -413,7 +429,7 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + opts.RemoteCache
 	}
 
-	buildConfig, err := buildConfigFlags(opts.ProxyDir, opts.Gperftools)
+	buildConfig, err := buildConfigFlags(opts.ProxyDir, opts.Gperftools, opts.Debug)
 	if err != nil {
 		return "", err
 	}
@@ -473,7 +489,7 @@ func EnvoyCentos7Target(opts TargetOptions) (string, error) {
 		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + opts.RemoteCache
 	}
 
-	buildConfig, err := buildConfigFlags(opts.ProxyDir, opts.Gperftools)
+	buildConfig, err := buildConfigFlags(opts.ProxyDir, opts.Gperftools, opts.Debug)
 	if err != nil {
 		return "", err
 	}
@@ -533,7 +549,7 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + opts.RemoteCache
 	}
 
-	buildConfig, err := buildConfigFlags(opts.ProxyDir, opts.Gperftools)
+	buildConfig, err := buildConfigFlags(opts.ProxyDir, opts.Gperftools, opts.Debug)
 	if err != nil {
 		return "", err
 	}

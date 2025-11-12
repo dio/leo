@@ -130,6 +130,7 @@ var (
 	fipsBuild                bool
 	gperftools               bool
 	wasm                     bool
+	debug                    bool
 	remoteCache              string
 	target                   string
 	arch                     string
@@ -153,7 +154,7 @@ var (
 				patchSource, patchSourceName,
 				remoteCache, patchSuffix, dynamicModulesBuild,
 				additionalPatchDir, additionalPatchDirSource,
-				fipsBuild, wasm, gperftools, nil)
+				fipsBuild, wasm, gperftools, debug, nil)
 			if err != nil {
 				return err
 			}
@@ -171,7 +172,7 @@ var (
 				patchSource, patchSourceName,
 				remoteCache, patchSuffix, dynamicModulesBuild,
 				additionalPatchDir, additionalPatchDirSource,
-				fipsBuild, wasm, gperftools, &build.Output{
+				fipsBuild, wasm, gperftools, debug, &build.Output{
 					Target: target,
 					Arch:   arch,
 				})
@@ -192,11 +193,12 @@ var (
 				patchSource, patchSourceName,
 				remoteCache, patchSuffix, dynamicModulesBuild,
 				additionalPatchDir, additionalPatchDirSource,
-				fipsBuild, wasm, gperftools, &build.Output{
+				fipsBuild, wasm, gperftools, debug, &build.Output{
 					Target: target,
 					Arch:   arch,
 					Repo:   repo,
 					Dir:    dir,
+					Debug:  debug,
 				})
 			if err != nil {
 				return err
@@ -215,7 +217,7 @@ var (
 				patchSource, patchSourceName,
 				remoteCache, patchSuffix, dynamicModulesBuild,
 				additionalPatchDir, additionalPatchDirSource,
-				fipsBuild, wasm, gperftools, nil)
+				fipsBuild, wasm, gperftools, debug, nil)
 			if err != nil {
 				return err
 			}
@@ -262,6 +264,7 @@ func init() {
 	proxyCmd.PersistentFlags().StringVar(&patchSourceName, "patch-source-name", "envoy", "Patch source name. For example: envoy, envoy-no-tls-chacha20-poly1305-sha256")
 	proxyCmd.PersistentFlags().StringVar(&patchSuffix, "patch-suffix", "", "Patch suffix, for example: -tlsnist-preview-") // The "-" prefix is important.
 	proxyCmd.PersistentFlags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
+	proxyCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Debug build")
 	proxyCmd.PersistentFlags().StringVar(&dynamicModulesBuild, "dynamic-modules-build", "", "Dynamic modules build")
 	proxyCmd.PersistentFlags().BoolVar(&gperftools, "gperftools", false, "Use Gperftools build")
 	proxyCmd.PersistentFlags().BoolVar(&wasm, "wasm", runtime.GOARCH == "amd64", "Build wasm")

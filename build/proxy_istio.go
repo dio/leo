@@ -27,6 +27,7 @@ type IstioProxyBuilder struct {
 	FIPSBuild           bool
 	DynamicModulesBuild string
 	Wasm                bool
+	Debug               bool
 	PatchInfoName       string
 	Gperftools          bool
 
@@ -110,7 +111,8 @@ func (b *IstioProxyBuilder) Info(ctx context.Context) error {
   envoyVersion: %s
   fips: %v
   dynamic-modules: %v
-`, b.Istio, b.IstioProxy, b.Envoy, envoyVersion, b.FIPSBuild, b.DynamicModulesBuild)
+  debug: %v
+`, b.Istio, b.IstioProxy, b.Envoy, envoyVersion, b.FIPSBuild, b.DynamicModulesBuild, b.Debug)
 	return nil
 }
 
@@ -302,7 +304,8 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
   envoyVersion: %s
   fips: %v
   dynamic-modules: %v
-`, b.Istio, b.IstioProxy, b.Envoy, envoyVersion, b.FIPSBuild, b.DynamicModulesBuild)
+  debug: %v
+`, b.Istio, b.IstioProxy, b.Envoy, envoyVersion, b.FIPSBuild, b.DynamicModulesBuild, b.Debug)
 
 	istioProxyDir, err := utils.GetTarballAndExtract(ctx, b.IstioProxy.Name(), istioProxyRef, "work")
 	if err != nil {
@@ -405,6 +408,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		DynamicModulesBuild: b.DynamicModulesBuild,
 		Gperftools:          b.Gperftools,
 		Wasm:                b.Wasm,
+		Debug:               b.Debug,
 		RemoteCache:         b.remoteCache,
 	}); err != nil {
 		return err

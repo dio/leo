@@ -251,14 +251,6 @@ const (
 )
 
 func buildConfigFlags(proxyDir string, gperftools, debug bool) (string, error) {
-	var flags string
-	if gperftools {
-		flags += " --define=tcmalloc=gperftools "
-	}
-	if debug {
-		flags += " --compilation_mode=dbg "
-	}
-
 	// build --config=libc++20
 	data, err := os.ReadFile(filepath.Join(proxyDir, ".bazelrc"))
 	if err != nil {
@@ -278,11 +270,11 @@ func buildConfigFlags(proxyDir string, gperftools, debug bool) (string, error) {
 	// When "configLibcxx" is enabled in proxy's .bazelrc, we don't need to specify it again.
 	// This to remedy: WARNING: The following configs were expanded more than once: [libc++, clang]. For repeatable flags, repeats are counted twice and may lead to unexpected behavior.
 	if strings.Contains(text, configLibcxx) && !debug {
-		return "--config=release" + flags + setHostActionEnvCompiler, nil
+		return "--config=release" + setHostActionEnvCompiler, nil
 	}
 
 	// For older version, we need to explicitly enable --config=libc++.
-	return "--config=release --config=libc++" + flags + setHostActionEnvCompiler, nil
+	return "--config=release --config=libc++" + setHostActionEnvCompiler, nil
 }
 
 func IstioProxyCentos7Target(opts TargetOptions) (string, error) {

@@ -314,7 +314,7 @@ istio-proxy-centos7-status:
 	cp -f bazel/bazel_get_workspace_status_istio-proxy bazel/bazel_get_workspace_status
 
 istio-proxy-centos7: istio-proxy-centos7-status
-	bazel build %s %s --stamp --stripopt=--strip-all --override_repository=envoy=/work%s %s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
 	mkdir -p /work/out/usr/local/bin
 	cp -f %s /work/out/usr/local/bin/envoy
 	tar -czf /work/out/%s -C /work/out usr
@@ -377,7 +377,7 @@ istio-proxy-status:
 	cp -f bazel/bazel_get_workspace_status_istio-proxy bazel/bazel_get_workspace_status
 
 istio-proxy: istio-proxy-status %s
-	bazel build %s %s --stamp --stripopt=--strip-all --override_repository=envoy=/work%s %s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
 	mkdir -p /work/out/usr/local/bin
 	cp -f %s /work/out/usr/local/bin/envoy
 	tar -czf /work/out/%s -C /work/out usr
@@ -386,17 +386,10 @@ istio-proxy: istio-proxy-status %s
 `
 	if opts.Debug {
 		targz = "istio-proxy-debug-" + runtime.GOARCH + ".tar.gz"
-		// In debug build, we don't strip the binary.
-		content = strings.ReplaceAll(content, "--stripopt=--strip-all", "")
 	}
 
 	if opts.Wasm && len(wasmTarget) > 0 {
 		content += buildWasmTarget(filepath.Join(opts.ProxyDir, "Makefile.core.mk"), strings.Replace(opts.EnvoyDir, opts.ProxyDir, "", 1))
-	}
-
-	if !opts.Debug {
-		target = target + ".stripped"
-		binaryPath = binaryPath + ".stripped"
 	}
 
 	return fmt.Sprintf(content,
@@ -414,8 +407,8 @@ istio-proxy: istio-proxy-status %s
 }
 
 func EnvoyTarget(opts TargetOptions) (string, error) {
-	target := "@envoy//source/exe:envoy-static.stripped"
-	binaryPath := "bazel-bin/external/envoy/source/exe/envoy-static.stripped"
+	target := "@envoy//source/exe:envoy-static"
+	binaryPath := "bazel-bin/external/envoy/source/exe/envoy-static"
 	var remoteCache string
 	if len(opts.RemoteCache) > 0 {
 		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + opts.RemoteCache
@@ -450,7 +443,7 @@ envoy-status:
 	cp -f bazel/bazel_get_workspace_status_envoy bazel/bazel_get_workspace_status
 
 envoy: envoy-status
-	bazel build %s %s --stamp --stripopt=--strip-all --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -510,7 +503,7 @@ envoy-centos7-status:
 	cp -f bazel/bazel_get_workspace_status_envoy bazel/bazel_get_workspace_status
 
 envoy-centos7: envoy-centos7-status
-	bazel build %s %s --stamp --stripopt=--strip-all --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s --override_repository=envoy_build_config=/work%s %s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy
@@ -534,8 +527,8 @@ envoy-centos7: envoy-centos7-status
 }
 
 func EnvoyContribTarget(opts TargetOptions) (string, error) {
-	target := "@envoy//contrib/exe:envoy-static.stripped"
-	binaryPath := "bazel-bin/external/envoy/contrib/exe/envoy-static.stripped"
+	target := "@envoy//contrib/exe:envoy-static"
+	binaryPath := "bazel-bin/external/envoy/contrib/exe/envoy-static"
 	var remoteCache string
 	if len(opts.RemoteCache) > 0 {
 		remoteCache = "--google_default_credentials --remote_cache=https://storage.googleapis.com/tetrate-istio-subscription-proxy-builder-" + opts.RemoteCache
@@ -568,7 +561,7 @@ envoy-contrib-status:
 	cp -f bazel/bazel_get_workspace_status_envoy-contrib bazel/bazel_get_workspace_status
 
 envoy-contrib: envoy-contrib-status
-	bazel build %s %s --stamp --stripopt=--strip-all --override_repository=envoy=/work%s %s %s %s
+	bazel build %s %s --stamp --override_repository=envoy=/work%s %s %s %s
 	mkdir -p /work/out
 	cp -f %s %s/envoy
 	tar -czf /work/out/%s -C %s envoy

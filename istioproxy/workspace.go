@@ -295,7 +295,7 @@ func IstioProxyCentos7Target(opts TargetOptions) (string, error) {
 
 	var boringssl string
 	if opts.FIPSBuild {
-		boringssl = "--define=boringssl=fips"
+		boringssl = "--define=boringssl=fips --@envoy//bazel:http3=False"
 	}
 
 	var ldLibraryPath string
@@ -349,7 +349,7 @@ func IstioProxyTarget(opts TargetOptions) (string, error) {
 
 	var boringssl string
 	if opts.FIPSBuild {
-		boringssl = "--define=boringssl=fips"
+		boringssl = "--define=boringssl=fips --@envoy//bazel:http3=False"
 	}
 
 	var ldLibraryPath string
@@ -421,7 +421,7 @@ func EnvoyTarget(opts TargetOptions) (string, error) {
 
 	var boringssl string
 	if opts.FIPSBuild {
-		boringssl = "--define=boringssl=fips"
+		boringssl = "--define=boringssl=fips --@envoy//bazel:http3=False"
 	}
 	// Write a WORKSPACE to source/extensions.
 	if err := os.WriteFile(filepath.Join(opts.EnvoyDir, "source", "extensions", "WORKSPACE"), []byte{}, os.ModePerm); err != nil {
@@ -481,7 +481,7 @@ func EnvoyCentos7Target(opts TargetOptions) (string, error) {
 
 	var boringssl string
 	if opts.FIPSBuild {
-		boringssl = "--define=boringssl=fips"
+		boringssl = "--define=boringssl=fips --@envoy//bazel:http3=False"
 	}
 	// Write a WORKSPACE to source/extensions.
 	if err := os.WriteFile(filepath.Join(opts.EnvoyDir, "source", "extensions", "WORKSPACE"), []byte{}, os.ModePerm); err != nil {
@@ -541,7 +541,7 @@ func EnvoyContribTarget(opts TargetOptions) (string, error) {
 
 	var boringssl string
 	if opts.FIPSBuild {
-		boringssl = "--define=boringssl=fips"
+		boringssl = "--define=boringssl=fips --@envoy//bazel:http3=False"
 	}
 
 	var ldLibraryPath string

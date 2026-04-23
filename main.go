@@ -128,6 +128,7 @@ var (
 	patchSourceName          string
 	dynamicModulesBuild      string
 	fipsBuild                bool
+	cryptoUpdateStream       bool
 	gperftools               bool
 	wasm                     bool
 	debug                    bool
@@ -154,7 +155,7 @@ var (
 				patchSource, patchSourceName,
 				remoteCache, patchSuffix, dynamicModulesBuild,
 				additionalPatchDir, additionalPatchDirSource,
-				fipsBuild, wasm, gperftools, debug, nil)
+				fipsBuild, cryptoUpdateStream, wasm, gperftools, debug, nil)
 			if err != nil {
 				return err
 			}
@@ -172,7 +173,7 @@ var (
 				patchSource, patchSourceName,
 				remoteCache, patchSuffix, dynamicModulesBuild,
 				additionalPatchDir, additionalPatchDirSource,
-				fipsBuild, wasm, gperftools, debug, &build.Output{
+				fipsBuild, cryptoUpdateStream, wasm, gperftools, debug, &build.Output{
 					Target: target,
 					Arch:   arch,
 				})
@@ -193,7 +194,7 @@ var (
 				patchSource, patchSourceName,
 				remoteCache, patchSuffix, dynamicModulesBuild,
 				additionalPatchDir, additionalPatchDirSource,
-				fipsBuild, wasm, gperftools, debug, &build.Output{
+				fipsBuild, cryptoUpdateStream, wasm, gperftools, debug, &build.Output{
 					Target: target,
 					Arch:   arch,
 					Repo:   repo,
@@ -217,7 +218,7 @@ var (
 				patchSource, patchSourceName,
 				remoteCache, patchSuffix, dynamicModulesBuild,
 				additionalPatchDir, additionalPatchDirSource,
-				fipsBuild, wasm, gperftools, debug, nil)
+				fipsBuild, cryptoUpdateStream, wasm, gperftools, debug, nil)
 			if err != nil {
 				return err
 			}
@@ -264,6 +265,7 @@ func init() {
 	proxyCmd.PersistentFlags().StringVar(&patchSourceName, "patch-source-name", "envoy", "Patch source name. For example: envoy, envoy-no-tls-chacha20-poly1305-sha256")
 	proxyCmd.PersistentFlags().StringVar(&patchSuffix, "patch-suffix", "", "Patch suffix, for example: -tlsnist-preview-") // The "-" prefix is important.
 	proxyCmd.PersistentFlags().BoolVar(&fipsBuild, "fips-build", false, "FIPS build")
+	proxyCmd.PersistentFlags().BoolVar(&cryptoUpdateStream, "crypto-updatestream", false, "FIPS build without precompiled BoringSSL BCM (crypto update stream)")
 	proxyCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Debug build")
 	proxyCmd.PersistentFlags().StringVar(&dynamicModulesBuild, "dynamic-modules-build", "", "Dynamic modules build")
 	proxyCmd.PersistentFlags().BoolVar(&gperftools, "gperftools", false, "Use Gperftools build")

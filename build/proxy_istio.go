@@ -25,6 +25,7 @@ type IstioProxyBuilder struct {
 	Envoy               arg.Version
 	Patch               patch.Getter
 	FIPSBuild           bool
+	CryptoUpdateStream  bool
 	DynamicModulesBuild string
 	Wasm                bool
 	Debug               bool
@@ -153,7 +154,9 @@ func (b *IstioProxyBuilder) getRemoteProxyDir() string {
 	if len(b.DynamicModulesBuild) > 0 {
 		remoteProxyDir += "-dynamic-modules"
 	}
-	if b.FIPSBuild {
+	if b.FIPSBuild && b.CryptoUpdateStream {
+		remoteProxyDir += "-crypto-updatestream"
+	} else if b.FIPSBuild {
 		remoteProxyDir += "-fips"
 	}
 
@@ -342,7 +345,9 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		}
 	}
 
-	if b.FIPSBuild {
+	if b.FIPSBuild && b.CryptoUpdateStream {
+		suffix = "" // no precompiled BCM patch for crypto update stream
+	} else if b.FIPSBuild {
 		suffix = "-fips"
 	}
 
@@ -411,6 +416,7 @@ func (b *IstioProxyBuilder) Build(ctx context.Context) error {
 		EnvoyRepo:           b.Envoy.Name(),
 		IstioVersion:        b.Version,
 		FIPSBuild:           b.FIPSBuild,
+		CryptoUpdateStream:  b.CryptoUpdateStream,
 		DynamicModulesBuild: b.DynamicModulesBuild,
 		Gperftools:          b.Gperftools,
 		Wasm:                b.Wasm,

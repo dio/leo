@@ -20,7 +20,7 @@ func NewProxyBuilder(target,
 	patchSource, patchSourceName,
 	remoteCache, patchSuffix, dynamicModulesBuild,
 	additionalPatchDir, additionalPatchDirSource string,
-	fipsBuild, wasm, gperftools, debug bool,
+	fipsBuild, cryptoUpdateStream, wasm, gperftools, debug bool,
 	output *Output) (*ProxyBuilder, error) {
 	var patchGetter patch.Getter
 	var additionalPatchGetter patch.Getter
@@ -66,6 +66,7 @@ func NewProxyBuilder(target,
 		istioProxy:            arg.Version(overrideIstioProxy),
 		patchGetter:           patchGetter,
 		fipsBuild:             fipsBuild,
+		cryptoUpdateStream:    cryptoUpdateStream,
 		dynamicModulesBuild:   dynamicModulesBuild,
 		gperftools:            gperftools,
 		wasm:                  wasm,
@@ -85,6 +86,7 @@ type ProxyBuilder struct {
 	istioProxy          arg.Version
 	patchGetter         patch.Getter
 	fipsBuild           bool
+	cryptoUpdateStream  bool
 	debug               bool
 	wasm                bool
 	gperftools          bool
@@ -116,6 +118,7 @@ func (b *ProxyBuilder) Info(ctx context.Context) error {
 			IstioProxy:            b.istioProxy,
 			Patch:                 b.patchGetter,
 			FIPSBuild:             b.fipsBuild,
+			CryptoUpdateStream:    b.cryptoUpdateStream,
 			DynamicModulesBuild:   b.dynamicModulesBuild,
 			Gperftools:            b.gperftools,
 			Wasm:                  b.wasm,
@@ -144,6 +147,7 @@ func (b *ProxyBuilder) Output(ctx context.Context) error {
 			IstioProxy:            b.istioProxy,
 			Patch:                 b.patchGetter,
 			FIPSBuild:             b.fipsBuild,
+			CryptoUpdateStream:    b.cryptoUpdateStream,
 			DynamicModulesBuild:   b.dynamicModulesBuild,
 			Wasm:                  b.wasm,
 			Debug:                 b.debug,
@@ -173,6 +177,7 @@ func (b *ProxyBuilder) Release(ctx context.Context) error {
 			IstioProxy:            b.istioProxy,
 			Patch:                 b.patchGetter,
 			FIPSBuild:             b.fipsBuild,
+			CryptoUpdateStream:    b.cryptoUpdateStream,
 			DynamicModulesBuild:   b.dynamicModulesBuild,
 			Gperftools:            b.gperftools,
 			Wasm:                  b.wasm,
@@ -203,6 +208,7 @@ func (b *ProxyBuilder) Build(ctx context.Context) error {
 			IstioProxy:            b.istioProxy,
 			Patch:                 b.patchGetter,
 			FIPSBuild:             b.fipsBuild,
+			CryptoUpdateStream:    b.cryptoUpdateStream,
 			DynamicModulesBuild:   b.dynamicModulesBuild,
 			Gperftools:            b.gperftools,
 			Wasm:                  b.wasm,
